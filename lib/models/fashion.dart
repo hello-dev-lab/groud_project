@@ -100,7 +100,7 @@ List<AppModel> fashionEcommerceApp = [
     category: "ເມົາສ໌",
     fcolors: [Colors.white, Colors.pink, Colors.yellow],
     size: ["S", "M", "L"],
-    description: "",
+    description: "ffff",
   ),
 
   // id:4
