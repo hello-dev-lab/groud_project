@@ -3,12 +3,15 @@ import 'package:firstapp/Widgets/curated_item.dart';
 import 'package:firstapp/api/api_path.dart';
 import 'package:firstapp/models/category_model.dart';
 import 'package:firstapp/models/product_model.dart';
+import 'package:firstapp/utils/CartProvider.dart';
 import 'package:firstapp/utils/color.dart';
 import 'package:firstapp/Widgets/banner.dart';
+import 'package:firstapp/views/cart_screen.dart';
 import 'package:firstapp/views/category_items.dart';
 import 'package:firstapp/views/detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -54,31 +57,31 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-
-  void fatchProduct() async{
+  void fatchProduct() async {
     setState(() {
       isLoading = true;
     });
 
     try {
-       final response = await http.get(Uri.parse(ApiPath.PRODUCT),
-       headers: {
-         'Content-Type': 'application/json',
-         'Accept': 'application/json',
-       }
-       );
+      final response = await http.get(
+        Uri.parse(ApiPath.PRODUCT),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
 
-       if (response.statusCode == 200) {
-         final jsonResponse = json.decode(response.body);
-         print('Product response: $jsonResponse');
-         final productData = Productsmodel.fromJson(jsonResponse);
-         setState(() {
-           products = productData.products ?? [];
-         });
-       } else{
-         print("Failed to load products: ${response.statusCode}");
-       }
-    }catch(e){
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        print('Product response: $jsonResponse');
+        final productData = Productsmodel.fromJson(jsonResponse);
+        setState(() {
+          products = productData.products ?? [];
+        });
+      } else {
+        print("Failed to load products: ${response.statusCode}");
+      }
+    } catch (e) {
       print('error $e');
     }
 
@@ -95,8 +98,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext) {
     Size size = MediaQuery.of(context).size;
+    final cart = Provider.of<CartProvider>(context); 
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(gradient: AppGradients.customGradient),
@@ -126,31 +130,43 @@ class _HomePageState extends State<HomePage> {
                           Stack(
                             clipBehavior: Clip.none,
                             children: [
-                              const Icon(
-                                Icons.shopping_bag_outlined,
-                                size: 30,
-                                color: Colors.white,
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.shopping_bag_outlined,
+                                  size: 30,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const CartScreen(cartItems: [],),
+                                    ),
+                                  );
+                                },
                               ),
-                              Positioned(
-                                right: -3,
-                                top: -5,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Center(
-                                    child: Text(
-                                      "3",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                              if (cart.itemCount > 0)
+                                Positioned(
+                                  right: -3,
+                                  top: -5,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        cart.itemCount.toString(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
                             ],
                           ),
                         ],
@@ -160,7 +176,10 @@ class _HomePageState extends State<HomePage> {
                     const MyBanner(),
 
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -174,10 +193,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           Text(
                             "ເພີ່ມເຕີມ",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
+                            style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         ],
                       ),
@@ -186,54 +202,69 @@ class _HomePageState extends State<HomePage> {
                     isLoading
                         ? const CircularProgressIndicator()
                         : SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: subcategory.map((cat) {
-                                return InkWell(
-                                  onTap: () {
-                                    final filteredItems = products
-                                        .where((item) =>
-                                            item.category.toString() ==
-                                            (cat.categoryName ?? "").toLowerCase())
-                                        .toList();
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children:
+                                subcategory.map((cat) {
+                                  return InkWell(
+                                    onTap: () {
+                                      final filteredItems =
+                                          products
+                                              .where(
+                                                (item) =>
+                                                    item.category.toString() ==
+                                                    (cat.categoryName ?? "")
+                                                        .toLowerCase(),
+                                              )
+                                              .toList();
 
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => CategoryItems(
-                                          category: cat.categoryName ?? '',
-                                          categoryItems: filteredItems,
-                                          subcategory: [],
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) => CategoryItems(
+                                                category:
+                                                    cat.categoryName ?? '',
+                                                categoryItems: filteredItems,
+                                                subcategory: [],
+                                              ),
                                         ),
-                                      ),
-                                    );
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                                        child: CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: Colors.white,
-                                          backgroundImage: NetworkImage(
-                                            ApiPath.Image + (cat.imageUrl ?? ''),
+                                      );
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                          ),
+                                          child: CircleAvatar(
+                                            radius: 30,
+                                            backgroundColor: Colors.white,
+                                            backgroundImage: NetworkImage(
+                                              ApiPath.Image +
+                                                  (cat.imageUrl ?? ''),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        cat.categoryName ?? '',
-                                        style: const TextStyle(color: Colors.white),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-                            ),
+                                        const SizedBox(height: 10),
+                                        Text(
+                                          cat.categoryName ?? '',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
                           ),
+                        ),
 
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -247,10 +278,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           Text(
                             "ເພີ່ມເຕີມ",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
+                            style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         ],
                       ),
@@ -262,17 +290,19 @@ class _HomePageState extends State<HomePage> {
                         children: List.generate(products.length, (index) {
                           final eCommerceItems = products[index];
                           return Padding(
-                            padding: index == 0
-                                ? const EdgeInsets.symmetric(horizontal: 20)
-                                : const EdgeInsets.only(right: 20),
+                            padding:
+                                index == 0
+                                    ? const EdgeInsets.symmetric(horizontal: 20)
+                                    : const EdgeInsets.only(right: 20),
                             child: InkWell(
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => DetailScreen(
-                                      eCommerceApp: eCommerceItems,
-                                    ),
+                                    builder:
+                                        (_) => DetailScreen(
+                                          eCommerceApp: eCommerceItems,
+                                        ),
                                   ),
                                 );
                               },

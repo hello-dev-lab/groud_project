@@ -121,7 +121,7 @@ class CategoryItems extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Hero(
-                                tag: item.id ?? item.imageUrl ?? index.toString(),
+                                tag: item.id.toString(), // ✅ Updated Hero tag
                                 child: Container(
                                   height: size.height * 0.25,
                                   width: size.width * 0.5,
@@ -150,32 +150,26 @@ class CategoryItems extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 7),
-                              SizedBox(
-                                width: size.width * 0.5,
-                                child: Text(
-                                  item.name ?? '',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16,
-                                    height: 1.5,
-                                    color: Colors.white,
-                                  ),
+                              Text(
+                                item.name ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                  height: 1.5,
+                                  color: Colors.white,
                                 ),
                               ),
-                              SizedBox(
-                                width: size.width * 0.5,
-                                child: Text(
-                                  item.description ?? '',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 10,
-                                    height: 1.5,
-                                    color: Colors.white,
-                                  ),
+                              Text(
+                                item.description ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 10,
+                                  height: 1.5,
+                                  color: Colors.white,
                                 ),
                               ),
                               Row(

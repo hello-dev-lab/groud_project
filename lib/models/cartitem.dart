@@ -1,11 +1,11 @@
 class CartItem {
   final String name;
-  final int quantity;
+  int quantity;
   final double price;
 
   CartItem({
     required this.name,
-    required this.quantity,
+    this.quantity = 1,
     required this.price,
   });
 }

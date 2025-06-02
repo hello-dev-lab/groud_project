@@ -1,9 +1,11 @@
 import 'package:firstapp/api/api_path.dart';
 import 'package:firstapp/models/product_model.dart';
+import 'package:firstapp/utils/CartProvider.dart';
 import 'package:firstapp/utils/color.dart';
 import 'package:flutter/material.dart';
 import 'package:firstapp/models/cartitem.dart';
 import 'package:firstapp/views/cart_screen.dart';
+import 'package:provider/provider.dart';
 
 class DetailScreen extends StatefulWidget {
   final Products eCommerceApp;
@@ -14,57 +16,51 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen> {
-  List<CartItem> _localCart = [];
-
   int currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+    final cartProvider = Provider.of<CartProvider>(context);
     Size size = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          "Detail Product",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text("ລາຍລະອຽດສິນຄ້າ", style: TextStyle(color: Colors.white)),
         flexibleSpace: Container(
           decoration: BoxDecoration(gradient: AppGradients.customGradient),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           Stack(
-            clipBehavior: Clip.none,
             children: [
               IconButton(
-                icon: Icon(Icons.shopping_bag_outlined, size: 30, color: Colors.white),
+                icon: const Icon(Icons.shopping_bag_outlined, size: 30, color: Colors.white),
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => CartScreen(cartItems: _localCart),
-                    ),
+                    MaterialPageRoute(builder: (context) => const CartScreen(cartItems: [])),
                   );
                 },
               ),
-              if (_localCart.isNotEmpty)
+              if (cartProvider.items.isNotEmpty)
                 Positioned(
                   right: 4,
                   top: 4,
                   child: Container(
-                    padding: EdgeInsets.all(4),
-                    decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
                     child: Text(
-                      _localCart.length.toString(),
-                      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      cartProvider.itemCount.toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
             ],
           ),
-          SizedBox(width: 20),
+          const SizedBox(width: 20),
         ],
       ),
       body: Container(
@@ -77,23 +73,21 @@ class _DetailScreenState extends State<DetailScreen> {
               width: size.width,
               child: PageView.builder(
                 onPageChanged: (value) => setState(() => currentIndex = value),
-                itemCount: 3,
-                scrollDirection: Axis.horizontal,
+                itemCount: 3, // เปลี่ยนตามจำนวนภาพจริงหากมีหลายภาพ
                 itemBuilder: (context, index) {
                   return Column(
                     children: [
                       Hero(
-                        tag: widget.eCommerceApp.imageUrl.toString(),
+                        tag: widget.eCommerceApp.id.toString(), // ✅ สำคัญ: ต้องตรงกับ Hero ในหน้าแรก
                         child: Image.network(
-                          ApiPath.Image + (widget.eCommerceApp.imageUrl.toString()),
+                          ApiPath.Image + widget.eCommerceApp.imageUrl.toString(),
                           height: size.height * 0.4,
                           width: size.width * 0.85,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Icon(Icons.broken_image, size: 100),
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 100),
                         ),
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
@@ -116,14 +110,13 @@ class _DetailScreenState extends State<DetailScreen> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(18),
+              padding: const EdgeInsets.all(18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     widget.eCommerceApp.name ?? "No name",
-                    maxLines: 1,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                       height: 1.5,
@@ -137,69 +130,42 @@ class _DetailScreenState extends State<DetailScreen> {
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 18,
-                          height: 1.5,
                           color: Colors.white,
                         ),
                       ),
                       const SizedBox(width: 5),
                       if (widget.eCommerceApp.isCheck == true)
                         Text(
-                          "₭ ${widget.eCommerceApp.originalPrice.toString()}.00",
+                          "₭ ${widget.eCommerceApp.originalPrice?.toStringAsFixed(2) ?? '0.00'}",
                           style: const TextStyle(
                             color: Colors.white,
                             decoration: TextDecoration.lineThrough,
-                            decorationColor: Colors.red,
                           ),
                         ),
                     ],
                   ),
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   Text(
                     widget.eCommerceApp.description ?? "No description",
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.white60,
                       letterSpacing: -.5,
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: List.generate(
-                  widget.eCommerceApp.imageUrl.toString().length,
-                  (index) => Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        ApiPath.Image + (widget.eCommerceApp.imageUrl.toString()),
-                        height: 100,
-                        width: 100,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 100),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            )
           ],
         ),
       ),
-      
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
         ),
         height: 70,
         child: Row(
@@ -207,36 +173,17 @@ class _DetailScreenState extends State<DetailScreen> {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  final selectedProduct = widget.eCommerceApp;
-
                   final item = CartItem(
-                    name: selectedProduct.name.toString(),
+                    name: widget.eCommerceApp.name ?? "No name",
                     quantity: 1,
-                    price: selectedProduct.price ?? 0.0,
+                    price: widget.eCommerceApp.price?.toDouble() ?? 0.0,
                   );
-
-                  setState(() {
-                    final existingIndex = _localCart.indexWhere(
-                      (e) => e.name == item.name && e.price == item.price,
-                    );
-
-                    if (existingIndex >= 0) {
-                      final existingItem = _localCart[existingIndex];
-                      _localCart[existingIndex] = CartItem(
-                        name: existingItem.name,
-                        quantity: existingItem.quantity + 1,
-                        price: existingItem.price,
-                      );
-                    } else {
-                      _localCart.add(item);
-                    }
-                  });
-
+                  cartProvider.addItem(item);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${selectedProduct.name} ถูกเพิ่มไปยังตะกร้าแล้ว'),
+                      content: Text('${item.name} ຖືກເພີ່ມໃສ່ກະຕ່າແລ້ວ'),
                       backgroundColor: Colors.green,
-                      duration: Duration(seconds: 1),
+                      duration: const Duration(seconds: 1),
                     ),
                   );
                 },
@@ -246,28 +193,33 @@ class _DetailScreenState extends State<DetailScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   alignment: Alignment.center,
-                  child: Row(
+                  child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.shopping_bag_outlined, color: Colors.white),
                       SizedBox(width: 8),
                       Text(
-                        "ADD TO CART",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        "ເພີ່ມໃສ່ກະຕ່າ",
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  print("Buy now");
+                  cartProvider.addItem(CartItem(
+                    name: widget.eCommerceApp.name ?? "No name",
+                    quantity: 1,
+                    price: widget.eCommerceApp.price?.toDouble() ?? 0.0,
+                  ));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CartScreen(cartItems: [])),
+                  );
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -275,12 +227,9 @@ class _DetailScreenState extends State<DetailScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    "BUY NOW",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: const Text(
+                    "ຊື້ຕອນນີ້",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
