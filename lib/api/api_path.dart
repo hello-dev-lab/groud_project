@@ -4,5 +4,6 @@ class ApiPath {
   static String CATEGORY = '${baseUrl}category/getAll';
   static String Image = '${baseUrl}upload/show/';
   static String PRODUCT = '${baseUrl}getAll';
+  static String Search = '${baseUrl}search';
   
 }
