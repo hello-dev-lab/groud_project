@@ -11,6 +11,8 @@ class AppGradients {
     begin: Alignment.topCenter, // เริ่มต้นจากด้านบนกลาง
     end: Alignment.topRight, // ไปสิ้นสุดที่มุมขวาบน
   );
+
+  AppGradients(colors);
 }
 
 Color bannerColor = const Color(0xffc4d1da);
