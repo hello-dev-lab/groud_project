@@ -1,8 +1,9 @@
-import 'package:firstapp/models/fashion.dart';
+import 'package:firstapp/api/api_path.dart';
+import 'package:firstapp/models/product_model.dart';
 import 'package:flutter/material.dart';
 
 class CuratedItem extends StatelessWidget {
-  final AppModel eCommerceItems;
+  final Products eCommerceItems;
   final Size size;
   const CuratedItem({
     super.key,
@@ -16,13 +17,13 @@ class CuratedItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Hero(
-          tag: eCommerceItems.image,
+          tag: eCommerceItems.id.toString(),
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               color: Colors.white,
               image: DecorationImage(
-                image: AssetImage(eCommerceItems.image),
+                image: NetworkImage(ApiPath.Image + (eCommerceItems.imageUrl.toString())),
                 fit: BoxFit.cover,
               ),
             ),
@@ -42,31 +43,25 @@ class CuratedItem extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 7),
-        Row(
-          children: [
-            Text(
-              "Digital Mart ",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
+       
+        SizedBox(
+          width: size.width * 0.5,
+          child: Text(
+            eCommerceItems.name.toString(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              height: 1.5,
+              color: Colors.white,
             ),
-            SizedBox(height: 5),
-            Icon(Icons.star, color: Colors.amber, size: 17),
-            Text(
-              eCommerceItems.rating.toString(),
-              style: const TextStyle(color: Colors.amber),
-            ),
-            Text(
-              "{${eCommerceItems.rewiews}}",
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
+          ),
         ),
         SizedBox(
           width: size.width * 0.5,
           child: Text(
-            eCommerceItems.name,
+            eCommerceItems.description.toString(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -80,7 +75,7 @@ class CuratedItem extends StatelessWidget {
         Row(
           children: [
             Text(
-              "₭ ${eCommerceItems.prince.toString()}.00",
+              "₭ ${eCommerceItems.price.toString()}00",
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 18,
@@ -88,16 +83,6 @@ class CuratedItem extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-            const SizedBox(width: 5),
-            if (eCommerceItems.isCheck == true)
-              Text(
-                "₭ ${eCommerceItems.prince + 100000}.00",
-                style: const TextStyle(
-                  color: Colors.white,
-                  decoration: TextDecoration.lineThrough,
-                  decorationColor: Colors.red,
-                ),
-              ),
           ],
         ),
       ],

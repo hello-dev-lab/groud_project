@@ -1,9 +1,8 @@
 import 'dart:convert';
-
 import 'package:firstapp/Widgets/curated_item.dart';
 import 'package:firstapp/api/api_path.dart';
 import 'package:firstapp/models/category_model.dart';
-import 'package:firstapp/models/fashion.dart';
+import 'package:firstapp/models/product_model.dart';
 import 'package:firstapp/utils/color.dart';
 import 'package:firstapp/Widgets/banner.dart';
 import 'package:firstapp/views/category_items.dart';
@@ -19,36 +18,80 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Data> subcategory = [];
+  List<Categories> subcategory = [];
+  List<Products> products = [];
   bool isLoading = false;
 
-  Future<void> fetchCategories() async {
+  void fetchCategory() async {
     setState(() {
       isLoading = true;
     });
 
-    final response = await http.get(Uri.parse(ApiPath.CATEGORY));
-    if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body);
-      final List<dynamic> dataList = jsonData['data'];
+    try {
+      final response = await http.get(
+        Uri.parse(ApiPath.CATEGORY),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
 
-      subcategory = dataList.map<Data>((json) => Data.fromJson(json)).toList();
-
-      setState(() {
-        isLoading = false;
-      });
-    } else {
-      setState(() {
-        isLoading = false;
-      });
-      print('Failed to load categories: ${response.reasonPhrase}');
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final categoryData = categorymodel.fromJson(jsonResponse);
+        setState(() {
+          subcategory = categoryData.categories ?? [];
+        });
+      } else {
+        print("Failed to load categories: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error: $e");
     }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+
+  void fatchProduct() async{
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+       final response = await http.get(Uri.parse(ApiPath.PRODUCT),
+       headers: {
+         'Content-Type': 'application/json',
+         'Accept': 'application/json',
+       }
+       );
+
+       if (response.statusCode == 200) {
+         final jsonResponse = json.decode(response.body);
+         print('Product response: $jsonResponse');
+         final productData = Productsmodel.fromJson(jsonResponse);
+         setState(() {
+           products = productData.products ?? [];
+         });
+       } else{
+         print("Failed to load products: ${response.statusCode}");
+       }
+    }catch(e){
+      print('error $e');
+    }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
   void initState() {
     super.initState();
-    fetchCategories();
+    fetchCategory();
+    fatchProduct();
   }
 
   @override
@@ -63,9 +106,9 @@ class _HomePageState extends State<HomePage> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -83,7 +126,7 @@ class _HomePageState extends State<HomePage> {
                           Stack(
                             clipBehavior: Clip.none,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.shopping_bag_outlined,
                                 size: 30,
                                 color: Colors.white,
@@ -92,12 +135,12 @@ class _HomePageState extends State<HomePage> {
                                 right: -3,
                                 top: -5,
                                 child: Container(
-                                  padding: EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
                                     color: Colors.red,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Center(
+                                  child: const Center(
                                     child: Text(
                                       "3",
                                       style: TextStyle(
@@ -125,7 +168,6 @@ class _HomePageState extends State<HomePage> {
                             "Categories",
                             style: TextStyle(
                               fontSize: 16,
-                              letterSpacing: 0,
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
                             ),
@@ -134,7 +176,6 @@ class _HomePageState extends State<HomePage> {
                             "ເພີ່ມເຕີມ",
                             style: TextStyle(
                               fontSize: 16,
-                              letterSpacing: 0,
                               color: Colors.white,
                             ),
                           ),
@@ -143,24 +184,26 @@ class _HomePageState extends State<HomePage> {
                     ),
 
                     isLoading
-                        ? CircularProgressIndicator()
+                        ? const CircularProgressIndicator()
                         : SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: Row(
-                              children: List.generate(
-                                subcategory.length,
-                                (index) => InkWell(
+                              children: subcategory.map((cat) {
+                                return InkWell(
                                   onTap: () {
-                                    final filterItem = fashionEcommerceApp
-                                        .where((item) => item.category.toLowerCase() ==
-                                            subcategory[index].categoryName.toLowerCase())
+                                    final filteredItems = products
+                                        .where((item) =>
+                                            item.category.toString() ==
+                                            (cat.categoryName ?? "").toLowerCase())
                                         .toList();
+
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => CategoryItems(
-                                          category: subcategory[index].categoryName,
-                                          categoryItems: filterItem, subcategory: [],
+                                          category: cat.categoryName ?? '',
+                                          categoryItems: filteredItems,
+                                          subcategory: [],
                                         ),
                                       ),
                                     );
@@ -168,23 +211,24 @@ class _HomePageState extends State<HomePage> {
                                   child: Column(
                                     children: [
                                       Container(
-                                        padding: EdgeInsets.symmetric(horizontal: 16),
+                                        padding: const EdgeInsets.symmetric(horizontal: 10),
                                         child: CircleAvatar(
                                           radius: 30,
                                           backgroundColor: Colors.white,
-                                          backgroundImage:
-                                              NetworkImage(subcategory[index].imageUrl),
+                                          backgroundImage: NetworkImage(
+                                            ApiPath.Image + (cat.imageUrl ?? ''),
+                                          ),
                                         ),
                                       ),
-                                      SizedBox(height: 10),
+                                      const SizedBox(height: 10),
                                       Text(
-                                        subcategory[index].categoryName,
-                                        style: TextStyle(color: Colors.white),
+                                        cat.categoryName ?? '',
+                                        style: const TextStyle(color: Colors.white),
                                       ),
                                     ],
                                   ),
-                                ),
-                              ),
+                                );
+                              }).toList(),
                             ),
                           ),
 
@@ -197,7 +241,6 @@ class _HomePageState extends State<HomePage> {
                             "ເລືອກຊື້ຕາມໝວດໝູ່",
                             style: TextStyle(
                               fontSize: 16,
-                              letterSpacing: 0,
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
                             ),
@@ -206,7 +249,6 @@ class _HomePageState extends State<HomePage> {
                             "ເພີ່ມເຕີມ",
                             style: TextStyle(
                               fontSize: 16,
-                              letterSpacing: 0,
                               color: Colors.white,
                             ),
                           ),
@@ -217,8 +259,8 @@ class _HomePageState extends State<HomePage> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
-                        children: List.generate(fashionEcommerceApp.length, (index) {
-                          final eCommerceItems = fashionEcommerceApp[index];
+                        children: List.generate(products.length, (index) {
+                          final eCommerceItems = products[index];
                           return Padding(
                             padding: index == 0
                                 ? const EdgeInsets.symmetric(horizontal: 20)

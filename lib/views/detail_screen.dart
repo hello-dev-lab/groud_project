@@ -1,12 +1,13 @@
-import 'package:firstapp/models/fashion.dart';
+import 'package:firstapp/api/api_path.dart';
+import 'package:firstapp/models/product_model.dart';
 import 'package:firstapp/utils/color.dart';
 import 'package:flutter/material.dart';
 import 'package:firstapp/models/cartitem.dart';
 import 'package:firstapp/views/cart_screen.dart';
 
 class DetailScreen extends StatefulWidget {
-  final AppModel eCommerceApp;
-  const DetailScreen({super.key, required this.eCommerceApp});
+  final Products eCommerceApp;
+  const DetailScreen({Key? key, required this.eCommerceApp}) : super(key: key);
 
   @override
   State<DetailScreen> createState() => _DetailScreenState();
@@ -16,8 +17,6 @@ class _DetailScreenState extends State<DetailScreen> {
   List<CartItem> _localCart = [];
 
   int currentIndex = 0;
-  int selectedColorIndex = 1;
-  int selectedSizeIndex = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -26,27 +25,21 @@ class _DetailScreenState extends State<DetailScreen> {
       appBar: AppBar(
         title: Text(
           "Detail Product",
-          style: TextStyle(color: const Color.fromARGB(255, 255, 255, 255)),
+          style: TextStyle(color: Colors.white),
         ),
         flexibleSpace: Container(
           decoration: BoxDecoration(gradient: AppGradients.customGradient),
         ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
-          onPressed: () {
-            Navigator.of(context).pop(); // ใช้ในการย้อนกลับ
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           Stack(
             clipBehavior: Clip.none,
             children: [
               IconButton(
-                icon: Icon(
-                  Icons.shopping_bag_outlined,
-                  size: 30,
-                  color: Colors.white,
-                ),
+                icon: Icon(Icons.shopping_bag_outlined, size: 30, color: Colors.white),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -62,17 +55,10 @@ class _DetailScreenState extends State<DetailScreen> {
                   top: 4,
                   child: Container(
                     padding: EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
                     child: Text(
                       _localCart.length.toString(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -90,23 +76,21 @@ class _DetailScreenState extends State<DetailScreen> {
               height: size.height * 0.46,
               width: size.width,
               child: PageView.builder(
-                onPageChanged: (value) {
-                  setState(() {
-                    currentIndex = value;
-                  });
-                },
+                onPageChanged: (value) => setState(() => currentIndex = value),
                 itemCount: 3,
                 scrollDirection: Axis.horizontal,
                 itemBuilder: (context, index) {
                   return Column(
                     children: [
                       Hero(
-                        tag: widget.eCommerceApp.image,
-                        child: Image.asset(
-                          widget.eCommerceApp.image,
+                        tag: widget.eCommerceApp.imageUrl.toString(),
+                        child: Image.network(
+                          ApiPath.Image + (widget.eCommerceApp.imageUrl.toString()),
                           height: size.height * 0.4,
                           width: size.width * 0.85,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(Icons.broken_image, size: 100),
                         ),
                       ),
                       SizedBox(height: 15),
@@ -121,10 +105,7 @@ class _DetailScreenState extends State<DetailScreen> {
                             height: 7,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
-                              color:
-                                  index == currentIndex
-                                      ? Colors.blue
-                                      : Colors.grey.shade400,
+                              color: index == currentIndex ? Colors.blue : Colors.grey.shade400,
                             ),
                           ),
                         ),
@@ -139,37 +120,8 @@ class _DetailScreenState extends State<DetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        "Digital Mart ",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(width: 5),
-                      Icon(Icons.star, color: Colors.amber, size: 17),
-                      Text(
-                        widget.eCommerceApp.rating.toString(),
-                        style: const TextStyle(color: Colors.amber),
-                      ),
-                      Text(
-                        "(${widget.eCommerceApp.rewiews})",
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      const Spacer(),
-                      Icon(Icons.share, color: Colors.white, size: 20),
-                      const SizedBox(width: 10),
-                      Icon(
-                        Icons.favorite_border,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ],
-                  ),
                   Text(
-                    widget.eCommerceApp.name,
+                    widget.eCommerceApp.name ?? "No name",
                     maxLines: 1,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
@@ -181,7 +133,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   Row(
                     children: [
                       Text(
-                        "₭ ${widget.eCommerceApp.prince.toString()}.00",
+                        "₭ ${widget.eCommerceApp.price?.toStringAsFixed(2) ?? '0.00'}",
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 18,
@@ -192,7 +144,7 @@ class _DetailScreenState extends State<DetailScreen> {
                       const SizedBox(width: 5),
                       if (widget.eCommerceApp.isCheck == true)
                         Text(
-                          "₭ ${widget.eCommerceApp.prince + 100000}.00",
+                          "₭ ${widget.eCommerceApp.originalPrice.toString()}.00",
                           style: const TextStyle(
                             color: Colors.white,
                             decoration: TextDecoration.lineThrough,
@@ -203,9 +155,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   ),
                   SizedBox(height: 15),
                   Text(
-                    widget.eCommerceApp.description.isNotEmpty
-                        ? widget.eCommerceApp.description
-                        : "ບໍ່ມີຄຳອະທີບາຍຂອງສິນຄ້າ",
+                    widget.eCommerceApp.description ?? "No description",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -213,170 +163,59 @@ class _DetailScreenState extends State<DetailScreen> {
                       letterSpacing: -.5,
                     ),
                   ),
-
                   SizedBox(height: 20),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: size.width / 2.1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Color",
-                              style: TextStyle(
-                                color: Colors.white38,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children:
-                                    widget.eCommerceApp.fcolors
-                                        .asMap()
-                                        .entries
-                                        .map((entry) {
-                                          final index = entry.key;
-                                          final color = entry.value;
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 10,
-                                              right: 10,
-                                            ),
-                                            child: CircleAvatar(
-                                              radius: 18,
-                                              backgroundColor: color,
-                                              child: InkWell(
-                                                onTap: () {
-                                                  setState(() {
-                                                    selectedColorIndex = index;
-                                                  });
-                                                },
-                                                child: Icon(
-                                                  Icons.check,
-                                                  color:
-                                                      selectedColorIndex ==
-                                                              index
-                                                          ? Colors.black
-                                                          : Colors.transparent,
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        })
-                                        .toList(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // size
-                      // SizedBox(
-                      //   width: size.width / 2.3,
-                      //   child: Column(
-                      //     crossAxisAlignment: CrossAxisAlignment.start,
-                      //     children: [
-                      //       Text(
-                      //         "Zize",
-                      //         style: TextStyle(
-                      //           color: Colors.white38,
-                      //           fontWeight: FontWeight.w500,
-                      //         ),
-                      //       ),
-                      //       SingleChildScrollView(
-                      //         scrollDirection: Axis.horizontal,
-                      //         child: Row(
-                      //           children:
-                      //               widget.eCommerceApp.size
-                      //                   .asMap()
-                      //                   .entries
-                      //                   .map((entry) {
-                      //                     final index = entry.key;
-                      //                     final String size = entry.value;
-                      //                     return GestureDetector(
-                      //                       onTap: () {
-                      //                         setState(() {
-                      //                           selectedSizeIndex = index;
-                      //                         });
-                      //                       },
-                      //                       child: Container(
-                      //                         margin: const EdgeInsets.only(
-                      //                           right: 10,
-                      //                           top: 10,
-                      //                         ),
-                      //                         height: 35,
-                      //                         width: 35,
-                      //                         decoration: BoxDecoration(
-                      //                           shape: BoxShape.circle,
-                      //                           color:
-                      //                               selectedSizeIndex == index
-                      //                                   ? Colors.black
-                      //                                   : Colors.white,
-                      //                           border: Border.all(
-                      //                             color:
-                      //                                 selectedSizeIndex == index
-                      //                                     ? Colors.white
-                      //                                     : Colors.black,
-                      //                           ),
-                      //                         ),
-                      //                         child: Center(
-                      //                           child: Text(
-                      //                             size,
-                      //                             style: TextStyle(
-                      //                               fontWeight: FontWeight.bold,
-                      //                               color:
-                      //                                   selectedSizeIndex ==
-                      //                                           index
-                      //                                       ? Colors.white
-                      //                                       : Colors.black,
-                      //                             ),
-                      //                           ),
-                      //                         ),
-                      //                       ),
-                      //                     );
-                      //                   })
-                      //                   .toList(),
-                      //         ),
-                      //       ),
-                      //     ],
-                      //   ),
-                      // ),
-                    ],
-                  ),
                 ],
               ),
             ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.generate(
+                  widget.eCommerceApp.imageUrl.toString().length,
+                  (index) => Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        ApiPath.Image + (widget.eCommerceApp.imageUrl.toString()),
+                        height: 100,
+                        width: 100,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 100),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            )
           ],
         ),
       ),
+      
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white, // หรือใช้ gradient ถ้าต้องการ
+          color: Colors.white,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(16),
             topRight: Radius.circular(16),
           ),
         ),
-        height: 70, // ⭐ เพิ่มความสูงชัดเจนเพื่อไม่ให้ยืดผิดแนว
+        height: 70,
         child: Row(
           children: [
-            // ADD TO CART
             Expanded(
               child: GestureDetector(
                 onTap: () {
                   final selectedProduct = widget.eCommerceApp;
 
                   final item = CartItem(
-                    name: selectedProduct.name,
+                    name: selectedProduct.name.toString(),
                     quantity: 1,
-                    price: selectedProduct.prince.toDouble(),
+                    price: selectedProduct.price ?? 0.0,
                   );
 
                   setState(() {
-                    // ตรวจสอบว่ามีใน cart แล้วหรือยัง
                     final existingIndex = _localCart.indexWhere(
                       (e) => e.name == item.name && e.price == item.price,
                     );
@@ -395,17 +234,12 @@ class _DetailScreenState extends State<DetailScreen> {
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        '${selectedProduct.name} ถูกเพิ่มไปยังตะกร้าแล้ว',
-                      ),
+                      content: Text('${selectedProduct.name} ถูกเพิ่มไปยังตะกร้าแล้ว'),
                       backgroundColor: Colors.green,
                       duration: Duration(seconds: 1),
                     ),
                   );
-
-                  print("Current local cart: ${_localCart.length} items");
                 },
-
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: AppGradients.customGradient,
@@ -429,10 +263,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 ),
               ),
             ),
-
             SizedBox(width: 12),
-
-            // BUY NOW
             Expanded(
               child: GestureDetector(
                 onTap: () {
@@ -440,7 +271,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.green, // ลองใช้สีตรงๆ เพื่อดูชัดเจน
+                    color: Colors.green,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   alignment: Alignment.center,

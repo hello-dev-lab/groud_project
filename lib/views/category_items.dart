@@ -1,13 +1,14 @@
+import 'package:firstapp/api/api_path.dart';
 import 'package:firstapp/models/category_model.dart';
-import 'package:firstapp/models/fashion.dart';
+import 'package:firstapp/models/product_model.dart';
 import 'package:firstapp/utils/color.dart';
 import 'package:firstapp/views/detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class CategoryItems extends StatelessWidget {
   final String category;
-  final List<AppModel> categoryItems;
-  final List<Data> subcategory;
+  final List<Products> categoryItems;
+  final List<Categories> subcategory;
 
   const CategoryItems({
     super.key,
@@ -19,19 +20,19 @@ class CategoryItems extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(gradient: AppGradients.customGradient),
         child: Column(
           children: [
+            // Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Row(
                 children: [
                   InkWell(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
+                    onTap: () => Navigator.pop(context),
                     child: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
                   ),
                   const SizedBox(width: 10),
@@ -45,16 +46,9 @@ class CategoryItems extends StatelessWidget {
                           hintStyle: const TextStyle(color: Colors.black),
                           filled: true,
                           fillColor: bannerColor,
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: Colors.black,
-                          ),
-                          border: const OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                          ),
+                          focusedBorder: const OutlineInputBorder(borderSide: BorderSide.none),
+                          prefixIcon: const Icon(Icons.search, color: Colors.black),
+                          border: const OutlineInputBorder(borderSide: BorderSide.none),
                         ),
                       ),
                     ),
@@ -62,44 +56,39 @@ class CategoryItems extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            SizedBox(height: 20),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: List.generate(
-                  subcategory.length,
-                  (index) => InkWell(
-                    onTap: () {},
+
+            // Subcategory scroll
+            SizedBox(
+              height: 110,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: subcategory.length,
+                itemBuilder: (context, index) {
+                  final cat = subcategory[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Column(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Container(
-                            height: 50,
-                            width: 50,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: NetworkImage(subcategory[index].imageUrl),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
+                        CircleAvatar(
+                          radius: 25,
+                          backgroundImage: NetworkImage(ApiPath.Image + (cat.imageUrl ?? '')),
+                          backgroundColor: Colors.white,
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          subcategory[index].categoryName,
+                          cat.categoryName ?? '',
                           style: const TextStyle(color: Colors.white),
                         ),
                       ],
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
+
             const SizedBox(height: 20),
+
+            // Product Grid
             Expanded(
               child: categoryItems.isEmpty
                   ? const Center(
@@ -132,18 +121,18 @@ class CategoryItems extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Hero(
-                                tag: item.image,
+                                tag: item.id ?? item.imageUrl ?? index.toString(),
                                 child: Container(
+                                  height: size.height * 0.25,
+                                  width: size.width * 0.5,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
                                     color: Colors.white,
                                     image: DecorationImage(
-                                      image: AssetImage(item.image),
+                                      image: NetworkImage(ApiPath.Image + item.imageUrl.toString()),
                                       fit: BoxFit.cover,
                                     ),
                                   ),
-                                  height: size.height * 0.25,
-                                  width: size.width * 0.5,
                                   child: const Padding(
                                     padding: EdgeInsets.all(12),
                                     child: Align(
@@ -161,33 +150,10 @@ class CategoryItems extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 7),
-                              Row(
-                                children: [
-                                  const Text(
-                                    "Digital Mart ",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const Icon(
-                                    Icons.star,
-                                    color: Colors.amber,
-                                    size: 17,
-                                  ),
-                                  Text(item.rating.toString()),
-                                  Text(
-                                    "{${item.rewiews}}",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
                               SizedBox(
                                 width: size.width * 0.5,
                                 child: Text(
-                                  item.name,
+                                  item.name ?? '',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -198,10 +164,24 @@ class CategoryItems extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              SizedBox(
+                                width: size.width * 0.5,
+                                child: Text(
+                                  item.description ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 10,
+                                    height: 1.5,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                               Row(
                                 children: [
                                   Text(
-                                    "₭ ${item.prince.toString()}.00",
+                                    "₭ ${item.price?.toStringAsFixed(2) ?? '0.00'}",
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 18,
@@ -212,7 +192,7 @@ class CategoryItems extends StatelessWidget {
                                   const SizedBox(width: 5),
                                   if (item.isCheck == true)
                                     Text(
-                                      "₭ ${item.prince + 100000}.00",
+                                      "₭ ${(item.price ?? 0) + 100000}.00",
                                       style: const TextStyle(
                                         color: Colors.white,
                                         decoration: TextDecoration.lineThrough,
