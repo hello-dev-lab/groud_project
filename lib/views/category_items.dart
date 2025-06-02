@@ -1,21 +1,56 @@
+import 'dart:convert';
 import 'package:firstapp/api/api_path.dart';
 import 'package:firstapp/models/category_model.dart';
 import 'package:firstapp/models/product_model.dart';
 import 'package:firstapp/utils/color.dart';
 import 'package:firstapp/views/detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-class CategoryItems extends StatelessWidget {
+class CategoryItems extends StatefulWidget {
   final String category;
   final List<Products> categoryItems;
   final List<Categories> subcategory;
+  bool isLoading = false;
 
-  const CategoryItems({
+ CategoryItems({
     super.key,
     required this.category,
     required this.categoryItems,
     required this.subcategory,
   });
+
+  @override
+  State<CategoryItems> createState() => _CategoryItemsState();
+}
+
+class _CategoryItemsState extends State<CategoryItems> {
+  List<Categories> subcategory = [];
+  TextEditingController searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    subcategory = widget.subcategory;
+    fetchCategory();
+  }
+
+  void fetchCategory() async {
+    try {
+      final response = await http.get(Uri.parse(ApiPath.CATEGORY));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final categoryData = categorymodel.fromJson(jsonResponse);
+        setState(() {
+          subcategory = categoryData.categories ?? [];
+        });
+      } else {
+        print("Failed to load categories: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +61,9 @@ class CategoryItems extends StatelessWidget {
         decoration: BoxDecoration(gradient: AppGradients.customGradient),
         child: Column(
           children: [
-            // Header
+            // Header with back + search
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
               child: Row(
                 children: [
                   InkWell(
@@ -40,9 +75,10 @@ class CategoryItems extends StatelessWidget {
                     child: SizedBox(
                       height: 45,
                       child: TextField(
+                        controller: searchController,
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.all(5),
-                          hintText: category,
+                          hintText: widget.category,
                           hintStyle: const TextStyle(color: Colors.black),
                           filled: true,
                           fillColor: bannerColor,
@@ -57,7 +93,9 @@ class CategoryItems extends StatelessWidget {
               ),
             ),
 
-            // Subcategory scroll
+            const SizedBox(height: 20),
+
+            // Subcategories horizontal scroll
             SizedBox(
               height: 110,
               child: ListView.builder(
@@ -66,7 +104,8 @@ class CategoryItems extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final cat = subcategory[index];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    
                     child: Column(
                       children: [
                         CircleAvatar(
@@ -90,7 +129,7 @@ class CategoryItems extends StatelessWidget {
 
             // Product Grid
             Expanded(
-              child: categoryItems.isEmpty
+              child: widget.categoryItems.isEmpty
                   ? const Center(
                       child: Text(
                         "No items available in this category",
@@ -99,7 +138,7 @@ class CategoryItems extends StatelessWidget {
                     )
                   : GridView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: categoryItems.length,
+                      itemCount: widget.categoryItems.length,
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         childAspectRatio: 0.6,
@@ -107,7 +146,7 @@ class CategoryItems extends StatelessWidget {
                         crossAxisSpacing: 16,
                       ),
                       itemBuilder: (context, index) {
-                        final item = categoryItems[index];
+                        final item = widget.categoryItems[index];
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -121,7 +160,7 @@ class CategoryItems extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Hero(
-                                tag: item.id.toString(), // ✅ Updated Hero tag
+                                tag: item.id.toString(),
                                 child: Container(
                                   height: size.height * 0.25,
                                   width: size.width * 0.5,
