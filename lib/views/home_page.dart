@@ -100,7 +100,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext) {
     Size size = MediaQuery.of(context).size;
-    final cart = Provider.of<CartProvider>(context); 
+    final cart = Provider.of<CartProvider>(context);
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(gradient: AppGradients.customGradient),
@@ -140,7 +140,9 @@ class _HomePageState extends State<HomePage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => const CartScreen(cartItems: [],),
+                                      builder:
+                                          (_) =>
+                                              const CartScreen(cartItems: []),
                                     ),
                                   );
                                 },
@@ -212,9 +214,12 @@ class _HomePageState extends State<HomePage> {
                                           products
                                               .where(
                                                 (item) =>
-                                                    item.category.toString() ==
-                                                    (cat.categoryName ?? "")
-                                                        .toLowerCase(),
+                                                    item.category
+                                                        ?.toLowerCase()
+                                                        .trim() ==
+                                                    cat.categoryName
+                                                        ?.toLowerCase()
+                                                        .trim(),
                                               )
                                               .toList();
 
@@ -226,7 +231,8 @@ class _HomePageState extends State<HomePage> {
                                                 category:
                                                     cat.categoryName ?? '',
                                                 categoryItems: filteredItems,
-                                                subcategory: [],
+                                                subcategory:
+                                                    subcategory, // ส่ง list เต็มๆ ไป
                                               ),
                                         ),
                                       );
