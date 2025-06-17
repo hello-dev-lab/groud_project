@@ -65,6 +65,8 @@ class Products {
 
   get colors => null;
 
+  get categoryId => null;
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
     data['id'] = this.id;
