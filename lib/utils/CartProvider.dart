@@ -11,9 +11,12 @@ class CartProvider with ChangeNotifier {
   double get totalPrice =>
       _items.fold(0, (total, item) => total + item.price * item.quantity);
 
+  get cartItems => null;
+
   void addItem(CartItem newItem) {
-    final index = _items.indexWhere((item) =>
-        item.name == newItem.name && item.price == newItem.price);
+    final index = _items.indexWhere(
+      (item) => item.name == newItem.name && item.price == newItem.price,
+    );
 
     if (index >= 0) {
       _items[index].quantity++;
@@ -25,6 +28,24 @@ class CartProvider with ChangeNotifier {
   }
 
   void removeItem(CartItem item) {
+    final index = _items.indexWhere(
+      (element) => element.name == item.name && element.price == item.price,
+    );
+
+    if (index >= 0) {
+      if(_items[index].quantity > 1) {
+        _items[index].quantity--;
+      } else {
+        return;
+      }
+    } else {
+      _items.removeAt(index);
+    }
+
+    notifyListeners();
+  }
+
+  void deleteItem(CartItem item) {
     _items.remove(item);
     notifyListeners();
   }
