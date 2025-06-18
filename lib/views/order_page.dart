@@ -23,6 +23,13 @@ class _OrderPageState extends State<OrderPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
+      body: Center(
+        child: Column(
+          children: [
+            Text('ຂໍ້ມູນຂອງຂ້ອຍ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),)
+          ],
+        )
+      )
     );
   }
 }
