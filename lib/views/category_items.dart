@@ -11,9 +11,8 @@ class CategoryItems extends StatefulWidget {
   final String category;
   final List<Products> categoryItems;
   final List<Categories> subcategory;
-  bool isLoading = false;
 
- CategoryItems({
+  const CategoryItems({
     super.key,
     required this.category,
     required this.categoryItems,
@@ -25,31 +24,13 @@ class CategoryItems extends StatefulWidget {
 }
 
 class _CategoryItemsState extends State<CategoryItems> {
-  List<Categories> subcategory = [];
+  late List<Categories> subcategory;
   TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     subcategory = widget.subcategory;
-    fetchCategory();
-  }
-
-  void fetchCategory() async {
-    try {
-      final response = await http.get(Uri.parse(ApiPath.CATEGORY));
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        final categoryData = categorymodel.fromJson(jsonResponse);
-        setState(() {
-          subcategory = categoryData.categories ?? [];
-        });
-      } else {
-        print("Failed to load categories: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Error: $e");
-    }
   }
 
   @override
@@ -61,7 +42,7 @@ class _CategoryItemsState extends State<CategoryItems> {
         decoration: BoxDecoration(gradient: AppGradients.customGradient),
         child: Column(
           children: [
-            // Header with back + search
+            // Header
             Padding(
               padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
               child: Row(
@@ -95,7 +76,7 @@ class _CategoryItemsState extends State<CategoryItems> {
 
             const SizedBox(height: 20),
 
-            // Subcategories horizontal scroll
+            // Subcategories
             SizedBox(
               height: 110,
               child: ListView.builder(
@@ -105,7 +86,6 @@ class _CategoryItemsState extends State<CategoryItems> {
                   final cat = subcategory[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
-                    
                     child: Column(
                       children: [
                         CircleAvatar(
@@ -126,8 +106,6 @@ class _CategoryItemsState extends State<CategoryItems> {
             ),
 
             const SizedBox(height: 20),
-
-
             Expanded(
               child: widget.categoryItems.isEmpty
                   ? const Center(
@@ -179,10 +157,7 @@ class _CategoryItemsState extends State<CategoryItems> {
                                       child: CircleAvatar(
                                         radius: 18,
                                         backgroundColor: Colors.white,
-                                        child: Icon(
-                                          Icons.favorite_border,
-                                          color: Colors.pink,
-                                        ),
+                                        child: Icon(Icons.favorite_border, color: Colors.pink),
                                       ),
                                     ),
                                   ),
