@@ -102,13 +102,14 @@ class _SearchPageState extends State<SearchPage> {
                                   color: Colors.white,
                                 ),
                                 onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const CartScreen(cartItems: [],),
-                                    ),
-                                  );
-                                },
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const CartScreen(), 
+    ),
+  );
+},
+
                               ),
                               if (cart.itemCount > 0)
                                 Positioned(

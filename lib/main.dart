@@ -1,6 +1,7 @@
+import 'package:firstapp/pages/onboarding.dart';
+import 'package:firstapp/pages/signin.dart';
 import 'package:firstapp/utils/CartProvider.dart';
 import 'package:flutter/material.dart';
-import 'package:firstapp/views/main_screen.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MainScreen(),
+      home: Onboarding(),
     );
   }
 }

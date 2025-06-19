@@ -5,5 +5,6 @@ class ApiPath {
   static String Image = '${baseUrl}upload/show/';
   static String PRODUCT = '${baseUrl}getAll';
   static String Search = '${baseUrl}search';
+  static String VerifyToken = '${baseUrl}user/verifyToken';
   
 }
