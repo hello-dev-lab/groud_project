@@ -31,14 +31,7 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final response = await http.get(
-        Uri.parse(ApiPath.CATEGORY),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      );
-
+      final response = await http.get(Uri.parse(ApiPath.CATEGORY));
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
         final categoryData = categorymodel.fromJson(jsonResponse);
@@ -57,23 +50,15 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void fatchProduct() async {
+  void fetchProduct() async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      final response = await http.get(
-        Uri.parse(ApiPath.PRODUCT),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      );
-
+      final response = await http.get(Uri.parse(ApiPath.PRODUCT));
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
-        print('Product response: $jsonResponse');
         final productData = Productsmodel.fromJson(jsonResponse);
         setState(() {
           products = productData.products ?? [];
@@ -82,7 +67,7 @@ class _HomePageState extends State<HomePage> {
         print("Failed to load products: ${response.statusCode}");
       }
     } catch (e) {
-      print('error $e');
+      print('Product fetch error: $e');
     }
 
     setState(() {
@@ -94,11 +79,11 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     fetchCategory();
-    fatchProduct();
+    fetchProduct();
   }
 
   @override
-  Widget build(BuildContext) {
+  Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     final cart = Provider.of<CartProvider>(context);
     return Scaffold(
@@ -109,6 +94,7 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 10),
                     Padding(
@@ -116,16 +102,10 @@ class _HomePageState extends State<HomePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          ColorFiltered(
-                            colorFilter: ColorFilter.mode(
-                              Colors.white,
-                              BlendMode.srcIn,
-                            ),
-                            child: Image.asset(
-                              "images/kingpng.png",
-                              height: 60,
-                              width: 60,
-                            ),
+                          Image.asset(
+                            "images/kingpng.png",
+                            height: 60,
+                            width: 60,
                           ),
                           Stack(
                             clipBehavior: Clip.none,
@@ -140,9 +120,8 @@ class _HomePageState extends State<HomePage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder:
-                                          (_) =>
-                                              const CartScreen(cartItems: []),
+                                      builder: (context) => const CartScreen(),
+                                      fullscreenDialog: true,
                                     ),
                                   );
                                 },
@@ -157,14 +136,12 @@ class _HomePageState extends State<HomePage> {
                                       color: Colors.red,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Center(
-                                      child: Text(
-                                        cart.itemCount.toString(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
+                                    child: Text(
+                                      cart.itemCount.toString(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
                                       ),
                                     ),
                                   ),
@@ -174,9 +151,7 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                     ),
-
                     const MyBanner(),
-
                     const Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 20,
@@ -200,7 +175,6 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                     ),
-
                     isLoading
                         ? const CircularProgressIndicator()
                         : SingleChildScrollView(
@@ -208,6 +182,15 @@ class _HomePageState extends State<HomePage> {
                           child: Row(
                             children:
                                 subcategory.map((cat) {
+                                  final filteredItems =
+                                      products
+                                          .where(
+                                            (item) =>
+                                                item.category?.toLowerCase() ==
+                                                cat.categoryName?.toLowerCase(),
+                                          )
+                                          .toList();
+
                                   return InkWell(
                                     onTap: () {
                                       final filteredItems =
@@ -222,7 +205,6 @@ class _HomePageState extends State<HomePage> {
                                                         .trim(),
                                               )
                                               .toList();
-
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -231,15 +213,14 @@ class _HomePageState extends State<HomePage> {
                                                 category:
                                                     cat.categoryName ?? '',
                                                 categoryItems: filteredItems,
-                                                subcategory:
-                                                    subcategory, // ส่ง list เต็มๆ ไป
+                                                subcategory: subcategory,
                                               ),
                                         ),
                                       );
                                     },
                                     child: Column(
                                       children: [
-                                        Container(
+                                        Padding(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 10,
                                           ),
@@ -265,7 +246,6 @@ class _HomePageState extends State<HomePage> {
                                 }).toList(),
                           ),
                         ),
-
                     const Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 20,
@@ -289,7 +269,6 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                     ),
-
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
