@@ -106,8 +106,6 @@ class _CategoryItemsState extends State<CategoryItems> {
             ),
 
             const SizedBox(height: 20),
-
-            // Products Grid
             Expanded(
               child: widget.categoryItems.isEmpty
                   ? const Center(
