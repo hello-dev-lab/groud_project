@@ -86,7 +86,6 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     final cart = Provider.of<CartProvider>(context);
-
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(gradient: AppGradients.customGradient),
@@ -121,7 +120,8 @@ class _HomePageState extends State<HomePage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => const CartScreen(),
+                                      builder: (context) => const CartScreen(),
+                                      fullscreenDialog: true,
                                     ),
                                   );
                                 },
@@ -193,6 +193,18 @@ class _HomePageState extends State<HomePage> {
 
                                   return InkWell(
                                     onTap: () {
+                                      final filteredItems =
+                                          products
+                                              .where(
+                                                (item) =>
+                                                    item.category
+                                                        ?.toLowerCase()
+                                                        .trim() ==
+                                                    cat.categoryName
+                                                        ?.toLowerCase()
+                                                        .trim(),
+                                              )
+                                              .toList();
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
