@@ -17,74 +17,7 @@ class Onboarding extends StatefulWidget {
 }
 
 class _OnboardingState extends State<Onboarding> {
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    onInitData();
-  }
-
-  final storage = const FlutterSecureStorage();
-
-  Future<void> onInitData() async {
-    try {
-      String? token = await storage.read(key: 'token');
-      print('Token: $token');
-
-      if (token == null) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const SignIn()),
-          (route) => false,
-        );
-        return;
-      }
-
-      var headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-      var request = http.Request('GET', Uri.parse(ApiPath.VerifyToken));
-      request.headers.addAll(headers);
-
-      http.StreamedResponse response = await request.send();
-      print('Response status: ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        var body = jsonDecode(await response.stream.bytesToString());
-        print('Response body: $body');
-
-        if (body['success'] == true) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const MainScreen()),
-            (route) => false,
-          );
-        } else {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const SignIn()),
-            (route) => false,
-          );
-        }
-      } else {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const SignIn()),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      print('Error: $e');
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const SignIn()),
-        (route) => false,
-      );
-    }
-  }
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -176,10 +109,7 @@ class _OnboardingState extends State<Onboarding> {
                 ),
               ),
             ),
-            SizedBox(height: 20),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
+           
             SizedBox(height: MediaQuery.of(context).size.height / 8),
             Text(
               "ເຂົ້າສູ່ລະບົບດ້ວຍ: ",

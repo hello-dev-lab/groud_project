@@ -1,5 +1,4 @@
 import 'package:firstapp/api/api_path.dart';
-import 'package:firstapp/models/cartitem.dart';
 import 'package:firstapp/views/order_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +18,7 @@ class CartScreen extends StatelessWidget {
     }
 
     return Scaffold(
+      backgroundColor: Colors.blueGrey[600],
       appBar: AppBar(
         title: const Text(
           "🛒 ກະຕ່າຂອງຂ້ອຍ",
@@ -119,7 +119,7 @@ class CartScreen extends StatelessWidget {
                                           ),
                                         ),
                                         Text(
-                                          "ລາຄາ: ₭ ${item.price.toStringAsFixed(2)}",
+                                          "ລາຄາ: ₭ ${item.price.toStringAsFixed(2)}0",
                                           style: const TextStyle(
                                             color: Colors.black,
                                           ),
@@ -218,6 +218,7 @@ class CartScreen extends StatelessWidget {
                                 icon: const Icon(Icons.shopping_cart_checkout),
                                 label: const Text("ສັ່ງຊື້"),
                                 onPressed: () {
+                                  
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text("ຂອບໃຈສຳລັບການສັ່ງຊື້!"),
@@ -229,6 +230,7 @@ class CartScreen extends StatelessWidget {
                                       builder:
                                           (context) => OrderPage(
                                             totalAmount: calculateTotal(),
+                                            cartItems: [...cart],
                                           ),
                                     ),
                                   );

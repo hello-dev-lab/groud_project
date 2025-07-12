@@ -23,7 +23,9 @@ class CuratedItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               color: Colors.white,
               image: DecorationImage(
-                image: NetworkImage(ApiPath.Image + (eCommerceItems.imageUrl.toString())),
+                image: NetworkImage(
+                  ApiPath.Image + (eCommerceItems.imageUrl.toString()),
+                ),
                 fit: BoxFit.cover,
               ),
             ),
@@ -43,7 +45,7 @@ class CuratedItem extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 7),
-       
+
         SizedBox(
           width: size.width * 0.5,
           child: Text(
@@ -83,6 +85,8 @@ class CuratedItem extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
+            SizedBox(width: 10),
+            Text("₭${eCommerceItems.originalPrice.toString()}.000", style: TextStyle(color: Colors.white),),
           ],
         ),
       ],

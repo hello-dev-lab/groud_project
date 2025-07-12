@@ -18,7 +18,7 @@ class CartManager {
         name: existingItem.name,
         quantity: existingItem.quantity + item.quantity,
         price: existingItem.price,
-        imageUrl: existingItem.imageUrl,
+        imageUrl: existingItem.imageUrl, productId: '',
       );
     } else {
       // ถ้ายังไม่มี -> เพิ่มใหม่

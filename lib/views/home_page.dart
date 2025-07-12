@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
     try {
       final response = await http.get(Uri.parse(ApiPath.CATEGORY));
       if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
+        final jsonResponse = jsonDecode(response.body);
         final categoryData = categorymodel.fromJson(jsonResponse);
         setState(() {
           subcategory = categoryData.categories ?? [];
