@@ -1,16 +1,19 @@
-// order_page.dart
+import 'dart:io';
 import 'dart:convert';
-
-import 'package:firstapp/models/cartitem.dart';
-import 'package:firstapp/views/Detail_page.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:firstapp/utils/color.dart';
 import 'package:firstapp/api/api_path.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firstapp/models/cartitem.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:firstapp/models/Districts.dart';
 import 'package:firstapp/models/Provinces.dart';
-import 'package:firstapp/utils/color.dart';
+import 'package:firstapp/views/main_screen.dart';
+import 'package:firstapp/utils/CartProvider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
-import 'package:photo_view/photo_view.dart';
 
 class OrderPage extends StatefulWidget {
   final double totalAmount;
@@ -29,21 +32,39 @@ class OrderPage extends StatefulWidget {
 class _OrderPageState extends State<OrderPage> {
   String? selectedProvince;
   String? selectedDistrict;
-  String? selectedVillage;
+  String? selectedTransportation;
+  String? selectedPayment;
   final storage = const FlutterSecureStorage();
   bool isLoading = false;
+  final _formKey = GlobalKey<FormState>();
 
-  final List<String> villages = ['Village A', 'Village B'];
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _villageController = TextEditingController();
+
+  final List<String> transportations = ['ຂົນສົ່ງ A', 'ຂົນສົ່ງ B'];
+  final List<String> items = ['ຕົ້ນທາງ', 'ປາຍທາງ'];
+
+  File? _selectedImage;
+
+  Future<void> _pickImage() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _selectedImage = File(result.files.single.path!);
+      });
+    }
+  }
 
   _SaveOrder() async {
-    setState(() {
-      isLoading = true;
-    });
+    if (!_formKey.currentState!.validate()) return;
 
-    // Validation
     if (selectedProvince == null ||
         selectedDistrict == null ||
-        selectedVillage == null) {
+        selectedTransportation == null ||
+        selectedPayment == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -52,11 +73,12 @@ class _OrderPageState extends State<OrderPage> {
           ),
         ),
       );
-      setState(() {
-        isLoading = false;
-      });
       return;
     }
+
+    setState(() {
+      isLoading = true;
+    });
 
     try {
       var token = await storage.read(key: 'token');
@@ -64,8 +86,11 @@ class _OrderPageState extends State<OrderPage> {
       final orderData = {
         'province': selectedProvince,
         'district': selectedDistrict,
-        'village': selectedVillage,
+        'village': _villageController.text,
+        'phoneNumber': _phoneController.text,
+        'Transportation': selectedTransportation,
         'total_amount': widget.totalAmount,
+        'payment_method': selectedPayment,
       };
 
       final response = await http.post(
@@ -79,19 +104,13 @@ class _OrderPageState extends State<OrderPage> {
 
       if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-        print("Response data: $responseData");
+        final orderId = responseData['order']['id'];
 
-        final orderId = responseData['id'];
         await saveOrderDetail(order_id: orderId.toString());
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Order placed successfully.')),
         );
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => DetailPage(orderDetailId: orderId),
-        //   ),
-        // );
       } else {
         ScaffoldMessenger.of(
           context,
@@ -112,10 +131,6 @@ class _OrderPageState extends State<OrderPage> {
   Future<void> saveOrderDetail({required String order_id}) async {
     try {
       for (var item in widget.cartItems) {
-        print(
-          "Sending order detail: order_id=$order_id, product_id=${item.productId}, quantity=${item.quantity}, price=${item.price}",
-        );
-
         var response = await http.post(
           Uri.parse(ApiPath.baseUrl + 'orderDetail'),
           headers: {'Content-Type': 'application/json'},
@@ -131,6 +146,16 @@ class _OrderPageState extends State<OrderPage> {
           print('Failed to save order detail: ${response.body}');
         }
       }
+
+      // ✅ Clear cart from provider
+      final cartProvider = Provider.of<CartProvider>(context, listen: false);
+      cartProvider.clearCart();
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+        (route) => false,
+      );
     } catch (e) {
       print('Exception saving order detail: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -156,13 +181,20 @@ class _OrderPageState extends State<OrderPage> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
+          key: _formKey,
           child: Column(
             children: [
+              const Align(
+                child: Text(
+                  'ຂໍ້ມູນທີ່ຢູ່',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+              ),
+              const SizedBox(height: 10),
               _buildDropdown('ແຂວງ', laoProvinces, selectedProvince, (val) {
                 setState(() {
                   selectedProvince = val;
                   selectedDistrict = null;
-                  selectedVillage = null;
                 });
               }),
               const SizedBox(height: 10),
@@ -173,12 +205,116 @@ class _OrderPageState extends State<OrderPage> {
                 (val) => setState(() => selectedDistrict = val),
               ),
               const SizedBox(height: 10),
-              _buildDropdown(
-                'ບ້ານ',
-                villages,
-                selectedVillage,
-                (val) => setState(() => selectedVillage = val),
+              TextFormField(
+                controller: _villageController,
+                decoration: InputDecoration(
+                  hintText: 'ບ້ານ',
+                  fillColor: Colors.white,
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                validator:
+                    (value) =>
+                        (value == null || value.isEmpty)
+                            ? 'ກະລຸນາໃສ່ບ້ານ'
+                            : null,
               ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _phoneController,
+                decoration: InputDecoration(
+                  hintText: 'ເບີໂທ',
+                  fillColor: Colors.white,
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                validator:
+                    (value) =>
+                        (value == null || value.isEmpty)
+                            ? 'ກະລຸນາໃສ່ເບີໂທ'
+                            : null,
+              ),
+              const SizedBox(height: 10),
+              _buildDropdown(
+                'ຂົນສົ່ງ',
+                transportations,
+                selectedTransportation,
+                (val) => setState(() => selectedTransportation = val),
+              ),
+              const SizedBox(height: 10),
+              _buildDropdown(
+                'ການຊໍາລະເງິນ',
+                items,
+                selectedPayment,
+                (val) => setState(() => selectedPayment = val),
+              ),
+              const SizedBox(height: 20),
+              if (selectedPayment == 'ຕົ້ນທາງ')
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '23456789',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Better-looking image container
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIImDqGJY4IoIHr5mroIuqvSjwf2RJBq9Z8g&s', // keep your full base64 here
+                          fit: BoxFit.cover,
+                          height: 200,
+                          width: double.infinity,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'ຮູບພາບການຊໍາລະ',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: _pickImage,
+                              icon: Icon(Icons.folder),
+                              label: Text("Pick Image"),
+                            ),
+                            const SizedBox(height: 20),
+                            if (_selectedImage != null)
+                              Image.file(
+                                _selectedImage!,
+                                height: 200,
+                                fit: BoxFit.cover,
+                              )
+                            else
+                              Text("No image selected."),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               const SizedBox(height: 20),
               const Align(
                 alignment: Alignment.centerLeft,
@@ -189,8 +325,15 @@ class _OrderPageState extends State<OrderPage> {
               ),
               const SizedBox(height: 10),
 
-              // List of items from cart
-              ...widget.cartItems.map(_buildProductItem).toList(),
+              // Fixed: provide unique key to each item
+              ...widget.cartItems.asMap().entries.map((entry) {
+                int index = entry.key;
+                CartItem item = entry.value;
+                return KeyedSubtree(
+                  key: ValueKey("cart_item_${item.productId}_$index"),
+                  child: _buildProductItem(item),
+                );
+              }).toList(),
 
               const SizedBox(height: 20),
               Align(
@@ -227,7 +370,6 @@ class _OrderPageState extends State<OrderPage> {
     );
   }
 
-  // Dropdown widget builder
   Widget _buildDropdown(
     String hint,
     List<String> items,
@@ -254,7 +396,6 @@ class _OrderPageState extends State<OrderPage> {
     );
   }
 
-  // Product cart item UI
   Widget _buildProductItem(CartItem item) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -262,44 +403,45 @@ class _OrderPageState extends State<OrderPage> {
       color: Colors.white,
       child: Row(
         children: [
-          Container(
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => Scaffold(
-                          body: Stack(
-                            children: [
-                              Center(
-                                child: PhotoView(
-                                  imageProvider: NetworkImage(
-                                    ApiPath.Image + (item.imageUrl ?? ''),
-                                  ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => Scaffold(
+                        body: Stack(
+                          children: [
+                            Center(
+                              child: PhotoView(
+                                imageProvider: NetworkImage(
+                                  ApiPath.Image + (item.imageUrl ?? ''),
                                 ),
                               ),
-                              Positioned(
-                                top: 50,
-                                left: 20,
-                                child: InkWell(
-                                  onTap: () => Navigator.pop(context),
-                                  child: Icon(Icons.close, color: Colors.white),
+                            ),
+                            Positioned(
+                              top: 50,
+                              left: 20,
+                              child: InkWell(
+                                onTap: () => Navigator.pop(context),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                  ),
-                );
-              },
-              child: Image.network(
-                ApiPath.Image + (item.imageUrl ?? ''),
-                width: 60,
-                height: 60,
-                errorBuilder:
-                    (_, __, ___) => const Icon(Icons.image_not_supported),
-              ),
+                      ),
+                ),
+              );
+            },
+            child: Image.network(
+              ApiPath.Image + (item.imageUrl ?? ''),
+              width: 60,
+              height: 60,
+              errorBuilder:
+                  (_, __, ___) => const Icon(Icons.image_not_supported),
             ),
           ),
           const SizedBox(width: 10),

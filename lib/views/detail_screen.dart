@@ -1,12 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:provider/provider.dart';
+import 'dart:convert';
+import 'cart_screen.dart';
+import '../utils/color.dart';
 import '../api/api_path.dart';
-import '../models/product_model.dart';
 import '../models/cartitem.dart';
 import '../utils/CartProvider.dart';
-import '../utils/color.dart';
-import 'cart_screen.dart';
+import '../models/product_model.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:photo_view/photo_view.dart';
 
 class DetailScreen extends StatefulWidget {
   final Products eCommerceApp;
@@ -18,6 +20,39 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   int currentIndex = 0;
+  bool isLoading = false;
+  List<Products> products = [];
+
+  void fetchProduct() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await http.get(Uri.parse(ApiPath.PRODUCT));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final productData = Productsmodel.fromJson(jsonResponse);
+        setState(() {
+          products = productData.products ?? [];
+        });
+      } else {
+        print("Failed to load products: ${response.statusCode}");
+      }
+    } catch (e) {
+      print('Product fetch error: $e');
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProduct();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,33 +126,31 @@ class _DetailScreenState extends State<DetailScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder:
-                          (context) => Scaffold(
-                            body: Stack(
-                              children: [
-                                Center(
-                                  child: PhotoView(
-                                    imageProvider: NetworkImage(
-                                      ApiPath.Image +
-                                          widget.eCommerceApp.imageUrl
-                                              .toString(),
-                                    ),
-                                  ),
+                      builder: (context) => Scaffold(
+                        body: Stack(
+                          children: [
+                            Center(
+                              child: PhotoView(
+                                imageProvider: NetworkImage(
+                                  ApiPath.Image +
+                                      widget.eCommerceApp.imageUrl.toString(),
                                 ),
-                                Positioned(
-                                  top: 50,
-                                  left: 20,
-                                  child: InkWell(
-                                    onTap: () => Navigator.pop(context),
-                                    child: const Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
+                            Positioned(
+                              top: 50,
+                              left: 20,
+                              child: InkWell(
+                                onTap: () => Navigator.pop(context),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },
@@ -148,15 +181,18 @@ class _DetailScreenState extends State<DetailScreen> {
                   Row(
                     children: [
                       Text(
-                        "₭ ${widget.eCommerceApp.price?.toStringAsFixed(2) ?? '000'}",
+                        "₭ ${widget.eCommerceApp.price?.toStringAsFixed(2) ?? '000'}0",
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 18,
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(width: 10,),
-                     Text('₭${widget.eCommerceApp.originalPrice.toString()}.000', style: TextStyle(color: Colors.white),)
+                      const SizedBox(width: 10),
+                      Text(
+                        '₭${widget.eCommerceApp.originalPrice.toString()}.000',
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 15),
@@ -171,6 +207,96 @@ class _DetailScreenState extends State<DetailScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Related Products Section
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 18.0, vertical: 8),
+              child: Text(
+                "ສິນຄ້າທີ່ຄ້າຍຄືກັນ",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 250,
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+
+                        // Skip current product
+                        if (product.id == widget.eCommerceApp.id) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      DetailScreen(eCommerceApp: product),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: 160,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(12)),
+                                    child: Image.network(
+                                      ApiPath.Image + (product.imageUrl ?? ''),
+                                      height: 120,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      product.name ?? '',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    child: Text(
+                                      "₭ ${product.price?.toStringAsFixed(2) ?? '0.00'}0",
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -191,10 +317,11 @@ class _DetailScreenState extends State<DetailScreen> {
                 onTap: () {
                   cartProvider.addItem(
                     CartItem(
+                      productId: widget.eCommerceApp.id.toString() ?? '',
                       name: widget.eCommerceApp.name ?? "No name",
                       quantity: 1,
                       price: widget.eCommerceApp.price?.toDouble() ?? 0.0,
-                      imageUrl: widget.eCommerceApp.imageUrl ?? "", productId: '',
+                      imageUrl: widget.eCommerceApp.imageUrl ?? "",
                     ),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -239,7 +366,8 @@ class _DetailScreenState extends State<DetailScreen> {
                       name: widget.eCommerceApp.name ?? "No name",
                       quantity: 1,
                       price: widget.eCommerceApp.price?.toDouble() ?? 0.0,
-                      imageUrl: widget.eCommerceApp.imageUrl ?? "", productId: '',
+                      imageUrl: widget.eCommerceApp.imageUrl ?? "",
+                      productId: '',
                     ),
                   );
                   Navigator.push(

@@ -1,9 +1,9 @@
-import 'package:firstapp/api/api_path.dart';
-import 'package:firstapp/views/order_page.dart';
+import '../utils/color.dart';
+import '../utils/CartProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../utils/CartProvider.dart';
-import '../utils/color.dart';
+import 'package:firstapp/api/api_path.dart';
+import 'package:firstapp/views/order_page.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -119,7 +119,7 @@ class CartScreen extends StatelessWidget {
                                           ),
                                         ),
                                         Text(
-                                          "ລາຄາ: ₭ ${item.price.toStringAsFixed(2)}0",
+                                          "ລາຄາ: ₭ ${item.price.toString()}",
                                           style: const TextStyle(
                                             color: Colors.black,
                                           ),
