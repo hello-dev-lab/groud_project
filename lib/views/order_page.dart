@@ -46,17 +46,17 @@ class _OrderPageState extends State<OrderPage> {
 
   File? _selectedImage;
 
-  Future<void> _pickImage() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-    );
+final ImagePicker _picker = ImagePicker();
 
-    if (result != null && result.files.single.path != null) {
-      setState(() {
-        _selectedImage = File(result.files.single.path!);
-      });
-    }
+Future<void> _pickImage() async {
+  final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+  if (pickedFile != null) {
+    setState(() {
+      _selectedImage = File(pickedFile.path);
+    });
   }
+}
 
   _SaveOrder() async {
     if (!_formKey.currentState!.validate()) return;

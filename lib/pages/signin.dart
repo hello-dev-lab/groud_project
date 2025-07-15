@@ -1,11 +1,11 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:firstapp/utils/color.dart';
 import 'package:firstapp/api/api_path.dart';
 import 'package:firstapp/pages/signup.dart';
-import 'package:firstapp/utils/color.dart';
 import 'package:firstapp/views/main_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -82,7 +82,6 @@ class _SignInState extends State<SignIn> {
       body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.only(top: 50),
-          height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(gradient: AppGradients.customGradient),
           child: Column(
@@ -100,141 +99,140 @@ class _SignInState extends State<SignIn> {
                 ),
               ),
               const SizedBox(height: 40),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "ອີເມວ",
+              Container(
+                height: MediaQuery.of(context).size.height * 0.85,
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "ອີເມວ",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 23,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextFormField(
+                        controller: emailCtrl,
+                        decoration: InputDecoration(
+                          hintText: "ປ້ອນອີເມວ",
+                          prefixIcon: const Icon(Icons.email_outlined),
+                          errorText: emailError.isNotEmpty ? emailError : null,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Email is required';
+                          }
+                          if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                            return 'Enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 40),
+                      const Text(
+                        "ລະຫັດຜ່ານ",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 23,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextFormField(
+                        controller: passwordCtrl,
+                        obscureText: showPassword,
+                        decoration: InputDecoration(
+                          hintText: "ປ້ອນລະຫັດຜ່ານ",
+                          prefixIcon: const Icon(Icons.lock_outlined),
+                          suffixIcon: IconButton(
+                            icon: Icon(showPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility),
+                            onPressed: () {
+                              setState(() {
+                                showPassword = !showPassword;
+                              });
+                            },
+                          ),
+                          errorText: passwordError.isNotEmpty ? passwordError : null,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Password is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: Text(
+                          "ລືມລະຫັດຜ່ານ?",
                           style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 23,
+                            color: Colors.blue.shade700,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        TextFormField(
-                          controller: emailCtrl,
-                          decoration: InputDecoration(
-                            hintText: "ປ້ອນອີເມວ",
-                            prefixIcon: const Icon(Icons.email_outlined),
-                            errorText: emailError.isNotEmpty ? emailError : null,
+                      ),
+                      const SizedBox(height: 80),
+                      GestureDetector(
+                        onTap: isLoading ? null : handleLogin,
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: AppGradients.customGradient,
+                            borderRadius: BorderRadius.circular(30),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Email is required';
-                            }
-                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                              return 'Enter a valid email';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 40),
-                        const Text(
-                          "ລະຫັດຜ່ານ",
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 23,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextFormField(
-                          controller: passwordCtrl,
-                          obscureText: showPassword,
-                          decoration: InputDecoration(
-                            hintText: "ປ້ອນລະຫັດຜ່ານ",
-                            prefixIcon: const Icon(Icons.lock_outlined),
-                            suffixIcon: IconButton(
-                              icon: Icon(showPassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility),
-                              onPressed: () {
-                                setState(() {
-                                  showPassword = !showPassword;
-                                });
-                              },
-                            ),
-                            errorText: passwordError.isNotEmpty ? passwordError : null,
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Password is required';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        Center(
-                          child: Text(
-                            "ລືມລະຫັດຜ່ານ?",
-                            style: TextStyle(
-                              color: Colors.blue.shade700,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 80),
-                        GestureDetector(
-                          onTap: isLoading ? null : handleLogin,
-                          child: Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              gradient: AppGradients.customGradient,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Center(
-                              child: isLoading
-                                  ? const CircularProgressIndicator(color: Colors.white)
-                                  : const Text(
-                                      "ເຂົ້າສູ່ລະບົບ",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                          child: Center(
+                            child: isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text(
+                                    "ເຂົ້າສູ່ລະບົບ",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                            ),
+                                  ),
                           ),
                         ),
-                        SizedBox(height: MediaQuery.of(context).size.height / 10),
-                        Center(
-                          child: Column(
-                            children: [
-                              const Text(
-                                "ຍັງບໍ່ທັນມີບັນຊີ?",
-                                style: TextStyle(color: Colors.black54, fontSize: 18),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const SignUp()),
-                                  );
-                                },
-                                child: const Text(
-                                  "ລົງທະບຽນ",
-                                  style: TextStyle(
-                                    color: Color.fromARGB(255, 38, 0, 255),
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                      ),
+                      const Spacer(),
+                      Center(
+                        child: Column(
+                          children: [
+                            const Text(
+                              "ຍັງບໍ່ທັນມີບັນຊີ?",
+                              style: TextStyle(color: Colors.black54, fontSize: 18),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const SignUp()),
+                                );
+                              },
+                              child: const Text(
+                                "ລົງທະບຽນ",
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 38, 0, 255),
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
