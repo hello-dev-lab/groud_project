@@ -1,7 +1,7 @@
 import 'package:firstapp/utils/CartProvider.dart';
+import 'package:firstapp/views/home_page.dart';
 import 'package:firstapp/views/profile.dart';
-import 'package:flutter/material.dart';
-import 'package:firstapp/views/main_screen.dart';
+import 'package:flutter/material.dart'; 
 import 'package:provider/provider.dart';
 
 void main() {
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Profile(),
+      home: HomePage()
     );
   }
 }
