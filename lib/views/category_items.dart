@@ -1,11 +1,12 @@
-import 'dart:convert';
+// import 'dart:convert';
+// import 'package:http/http.dart' as http;
 import 'package:firstapp/api/api_path.dart';
 import 'package:firstapp/models/category_model.dart';
 import 'package:firstapp/models/product_model.dart';
 import 'package:firstapp/utils/color.dart';
 import 'package:firstapp/views/detail_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+// import 'package:firstapp/views/image_preview_screen.dart';
 
 class CategoryItems extends StatefulWidget {
   final String category;

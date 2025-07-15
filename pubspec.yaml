@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.3.0
   carousel_slider: ^5.0.0
+  zoom_hover_pinch_image: ^1.0.4
 
 dev_dependencies:
   flutter_test:
