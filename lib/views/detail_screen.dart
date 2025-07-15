@@ -1,11 +1,14 @@
-import 'package:firstapp/api/api_path.dart';
-import 'package:firstapp/models/product_model.dart';
-import 'package:firstapp/utils/CartProvider.dart';
-import 'package:firstapp/utils/color.dart';
+import 'dart:convert';
+import 'cart_screen.dart';
+import '../utils/color.dart';
+import '../api/api_path.dart';
+import '../models/cartitem.dart';
+import '../utils/CartProvider.dart';
+import '../models/product_model.dart';
 import 'package:flutter/material.dart';
-import 'package:firstapp/models/cartitem.dart';
-import 'package:firstapp/views/cart_screen.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:photo_view/photo_view.dart';
 
 class DetailScreen extends StatefulWidget {
   final Products eCommerceApp;
@@ -17,6 +20,39 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   int currentIndex = 0;
+  bool isLoading = false;
+  List<Products> products = [];
+
+  void fetchProduct() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await http.get(Uri.parse(ApiPath.PRODUCT));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final productData = Productsmodel.fromJson(jsonResponse);
+        setState(() {
+          products = productData.products ?? [];
+        });
+      } else {
+        print("Failed to load products: ${response.statusCode}");
+      }
+    } catch (e) {
+      print('Product fetch error: $e');
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProduct();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +61,10 @@ class _DetailScreenState extends State<DetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("ລາຍລະອຽດສິນຄ້າ", style: TextStyle(color: Colors.white)),
+        title: const Text(
+          "ລາຍລະອຽດສິນຄ້າ",
+          style: TextStyle(color: Colors.white),
+        ),
         flexibleSpace: Container(
           decoration: BoxDecoration(gradient: AppGradients.customGradient),
         ),
@@ -37,24 +76,35 @@ class _DetailScreenState extends State<DetailScreen> {
           Stack(
             children: [
               IconButton(
-                icon: const Icon(Icons.shopping_bag_outlined, size: 30, color: Colors.white),
+                icon: const Icon(
+                  Icons.shopping_bag_outlined,
+                  size: 30,
+                  color: Colors.white,
+                ),
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const CartScreen(cartItems: [])),
+                    MaterialPageRoute(builder: (context) => const CartScreen()),
                   );
                 },
               ),
-              if (cartProvider.items.isNotEmpty)
+              if (cartProvider.itemCount > 0)
                 Positioned(
                   right: 4,
                   top: 4,
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
                     child: Text(
                       cartProvider.itemCount.toString(),
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -71,42 +121,48 @@ class _DetailScreenState extends State<DetailScreen> {
               color: Colors.grey.shade200,
               height: size.height * 0.46,
               width: size.width,
-              child: PageView.builder(
-                onPageChanged: (value) => setState(() => currentIndex = value),
-                itemCount: 3, // เปลี่ยนตามจำนวนภาพจริงหากมีหลายภาพ
-                itemBuilder: (context, index) {
-                  return Column(
-                    children: [
-                      Hero(
-                        tag: widget.eCommerceApp.id.toString(), // ✅ สำคัญ: ต้องตรงกับ Hero ในหน้าแรก
-                        child: Image.network(
-                          ApiPath.Image + widget.eCommerceApp.imageUrl.toString(),
-                          height: size.height * 0.4,
-                          width: size.width * 0.85,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 100),
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          3,
-                          (index) => AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            margin: const EdgeInsets.only(right: 4),
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: index == currentIndex ? Colors.blue : Colors.grey.shade400,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Scaffold(
+                        body: Stack(
+                          children: [
+                            Center(
+                              child: PhotoView(
+                                imageProvider: NetworkImage(
+                                  ApiPath.Image +
+                                      widget.eCommerceApp.imageUrl.toString(),
+                                ),
+                              ),
                             ),
-                          ),
+                            Positioned(
+                              top: 50,
+                              left: 20,
+                              child: InkWell(
+                                onTap: () => Navigator.pop(context),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   );
                 },
+                child: Hero(
+                  tag: 'product-${widget.eCommerceApp.id}',
+                  child: Image.network(
+                    ApiPath.Image + widget.eCommerceApp.imageUrl.toString(),
+                    height: size.height * 0.4,
+                    width: size.width * 0.85,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
             ),
             Padding(
@@ -119,29 +175,24 @@ class _DetailScreenState extends State<DetailScreen> {
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
-                      height: 1.5,
                       color: Colors.white,
                     ),
                   ),
                   Row(
                     children: [
                       Text(
-                        "₭ ${widget.eCommerceApp.price?.toStringAsFixed(2) ?? '0.00'}",
+                        "₭ ${widget.eCommerceApp.price?.toStringAsFixed(2) ?? '000'}0",
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 18,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 5),
-                      if (widget.eCommerceApp.isCheck == true)
-                        Text(
-                          "₭ ${widget.eCommerceApp.originalPrice?.toStringAsFixed(2) ?? '0.00'}",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
+                      const SizedBox(width: 10),
+                      Text(
+                        '₭${widget.eCommerceApp.originalPrice.toString()}.000',
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 15),
@@ -150,14 +201,102 @@ class _DetailScreenState extends State<DetailScreen> {
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white60,
-                      letterSpacing: -.5,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 20),
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Related Products Section
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 18.0, vertical: 8),
+              child: Text(
+                "ສິນຄ້າທີ່ຄ້າຍຄືກັນ",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 250,
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+
+                        // Skip current product
+                        if (product.id == widget.eCommerceApp.id) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      DetailScreen(eCommerceApp: product),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: 160,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(12)),
+                                    child: Image.network(
+                                      ApiPath.Image + (product.imageUrl ?? ''),
+                                      height: 120,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      product.name ?? '',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    child: Text(
+                                      "₭ ${product.price?.toStringAsFixed(2) ?? '0.00'}0",
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -165,7 +304,10 @@ class _DetailScreenState extends State<DetailScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+          ),
         ),
         height: 70,
         child: Row(
@@ -173,15 +315,20 @@ class _DetailScreenState extends State<DetailScreen> {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  final item = CartItem(
-                    name: widget.eCommerceApp.name ?? "No name",
-                    quantity: 1,
-                    price: widget.eCommerceApp.price?.toDouble() ?? 0.0,
+                  cartProvider.addItem(
+                    CartItem(
+                      productId: widget.eCommerceApp.id.toString() ?? '',
+                      name: widget.eCommerceApp.name ?? "No name",
+                      quantity: 1,
+                      price: widget.eCommerceApp.price?.toDouble() ?? 0.0,
+                      imageUrl: widget.eCommerceApp.imageUrl ?? "",
+                    ),
                   );
-                  cartProvider.addItem(item);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${item.name} ຖືກເພີ່ມໃສ່ກະຕ່າແລ້ວ'),
+                      content: Text(
+                        '${widget.eCommerceApp.name} ຖືກເພີ່ມໃສ່ກະຕ່າແລ້ວ',
+                      ),
                       backgroundColor: Colors.green,
                       duration: const Duration(seconds: 1),
                     ),
@@ -200,7 +347,10 @@ class _DetailScreenState extends State<DetailScreen> {
                       SizedBox(width: 8),
                       Text(
                         "ເພີ່ມໃສ່ກະຕ່າ",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -211,14 +361,18 @@ class _DetailScreenState extends State<DetailScreen> {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  cartProvider.addItem(CartItem(
-                    name: widget.eCommerceApp.name ?? "No name",
-                    quantity: 1,
-                    price: widget.eCommerceApp.price?.toDouble() ?? 0.0,
-                  ));
+                  cartProvider.addItem(
+                    CartItem(
+                      name: widget.eCommerceApp.name ?? "No name",
+                      quantity: 1,
+                      price: widget.eCommerceApp.price?.toDouble() ?? 0.0,
+                      imageUrl: widget.eCommerceApp.imageUrl ?? "",
+                      productId: '',
+                    ),
+                  );
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const CartScreen(cartItems: [])),
+                    MaterialPageRoute(builder: (context) => const CartScreen()),
                   );
                 },
                 child: Container(
@@ -229,7 +383,10 @@ class _DetailScreenState extends State<DetailScreen> {
                   alignment: Alignment.center,
                   child: const Text(
                     "ຊື້ຕອນນີ້",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

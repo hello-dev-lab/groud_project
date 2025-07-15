@@ -1,11 +1,12 @@
-import 'package:firstapp/models/cartitem.dart';
+import '../utils/color.dart';
+import '../utils/CartProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../utils/CartProvider.dart';
-import '../utils/color.dart';
+import 'package:firstapp/api/api_path.dart';
+import 'package:firstapp/views/order_page.dart';
 
 class CartScreen extends StatelessWidget {
-  const CartScreen({super.key, required List<CartItem> cartItems});
+  const CartScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +18,7 @@ class CartScreen extends StatelessWidget {
     }
 
     return Scaffold(
+      backgroundColor: Colors.blueGrey[600],
       appBar: AppBar(
         title: const Text(
           "🛒 ກະຕ່າຂອງຂ້ອຍ",
@@ -30,7 +32,6 @@ class CartScreen extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-
       body:
           cart.isEmpty
               ? const Center(
@@ -47,6 +48,7 @@ class CartScreen extends StatelessWidget {
                         itemCount: cart.length,
                         itemBuilder: (context, index) {
                           final item = cart[index];
+
                           return Card(
                             margin: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -58,14 +60,50 @@ class CartScreen extends StatelessWidget {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  CircleAvatar(
-                                    backgroundColor: Colors.teal,
-                                    child: Text(
-                                      item.quantity.toString(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child:
+                                        (item.imageUrl ?? '').isNotEmpty
+                                            ? Image.network(
+                                              ApiPath.Image +
+                                                  item.imageUrl.toString(),
+                                              width: 60,
+                                              height: 60,
+                                              fit: BoxFit.cover,
+                                              loadingBuilder: (
+                                                context,
+                                                child,
+                                                loadingProgress,
+                                              ) {
+                                                if (loadingProgress == null)
+                                                  return child;
+                                                return const SizedBox(
+                                                  width: 60,
+                                                  height: 60,
+                                                  child: Center(
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                        ),
+                                                  ),
+                                                );
+                                              },
+                                              errorBuilder:
+                                                  (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) => const Icon(
+                                                    Icons.broken_image,
+                                                    size: 50,
+                                                    color: Colors.grey,
+                                                  ),
+                                            )
+                                            : const Icon(
+                                              Icons.image_not_supported,
+                                              size: 50,
+                                              color: Colors.grey,
+                                            ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
@@ -81,7 +119,13 @@ class CartScreen extends StatelessWidget {
                                           ),
                                         ),
                                         Text(
-                                          "ລາຄາ: ₭ ${item.price.toStringAsFixed(2)}",
+                                          "ລາຄາ: ₭ ${item.price.toString()}",
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                        Text(
+                                          "ຈໍານວນ: ${item.quantity}",
                                           style: const TextStyle(
                                             color: Colors.black,
                                           ),
@@ -89,33 +133,39 @@ class CartScreen extends StatelessWidget {
                                       ],
                                     ),
                                   ),
-                                  Column(
+                                  Row(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text(
-                                        "₭ ${(item.price * item.quantity).toStringAsFixed(2)}",
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+                                      IconButton(
+                                        onPressed:
+                                            () => cartProvider.addItem(item),
+                                        icon: Icon(Icons.add),
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 8.0,
-                                        ), // ขยับปุ่มลบเข้ามา
-                                        child: Expanded(
-                                          child: IconButton(
-                                            icon: const Icon(
-                                              Icons.delete,
-                                              color: Colors.red,
-                                              size: 20,
+                                      IconButton(
+                                        onPressed:
+                                            () => cartProvider.removeItem(item),
+                                        icon: Icon(Icons.remove),
+                                      ),
+                                      PopupMenuButton(
+                                        itemBuilder: (context) {
+                                          return [
+                                            PopupMenuItem(
+                                              child: IconButton(
+                                                icon: const Icon(
+                                                  Icons.delete,
+                                                  color: Colors.red,
+                                                  size: 20,
+                                                ),
+                                                onPressed: () {
+                                                  cartProvider.deleteItem(item);
+                                                  Navigator.of(context).pop();
+                                                },
+                                              ),
                                             ),
-                                            onPressed: () {
-                                              cartProvider.removeItem(item);
-                                            },
-                                          ),
-                                        ),
+                                          ];
+                                        },
+                                        icon: Icon(Icons.more_vert),
                                       ),
                                     ],
                                   ),
@@ -168,9 +218,20 @@ class CartScreen extends StatelessWidget {
                                 icon: const Icon(Icons.shopping_cart_checkout),
                                 label: const Text("ສັ່ງຊື້"),
                                 onPressed: () {
+                                  
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text("ຂອບໃຈສຳລັບການສັ່ງຊື້!"),
+                                    ),
+                                  );
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => OrderPage(
+                                            totalAmount: calculateTotal(),
+                                            cartItems: [...cart],
+                                          ),
                                     ),
                                   );
                                 },

@@ -3,7 +3,8 @@ class ApiPath {
   static String SIGNUP = '${baseUrl}user';
   static String CATEGORY = '${baseUrl}category/getAll';
   static String Image = '${baseUrl}upload/show/';
-  static String PRODUCT = '${baseUrl}getAll';
+  static String PRODUCT = '${baseUrl}product/getAll';
   static String Search = '${baseUrl}search';
+  static String VerifyToken = '${baseUrl}user/verifyToken';
   
 }

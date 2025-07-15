@@ -1,7 +1,13 @@
+import 'dart:convert';
+
+import 'package:firstapp/api/api_path.dart';
 import 'package:firstapp/pages/signin.dart';
 import 'package:firstapp/pages/signup.dart';
 import 'package:firstapp/utils/color.dart';
+import 'package:firstapp/views/main_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 class Onboarding extends StatefulWidget {
   const Onboarding({super.key});
@@ -11,16 +17,14 @@ class Onboarding extends StatefulWidget {
 }
 
 class _OnboardingState extends State<Onboarding> {
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
-        //backgroudcolor
-        decoration: BoxDecoration(
-          gradient: AppGradients.customGradient,
-        ),
+        decoration: BoxDecoration(gradient: AppGradients.customGradient),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -35,7 +39,7 @@ class _OnboardingState extends State<Onboarding> {
               "Wow! You are here",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 30,
+                fontSize: 30, 
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -105,6 +109,7 @@ class _OnboardingState extends State<Onboarding> {
                 ),
               ),
             ),
+           
             SizedBox(height: MediaQuery.of(context).size.height / 8),
             Text(
               "ເຂົ້າສູ່ລະບົບດ້ວຍ: ",
