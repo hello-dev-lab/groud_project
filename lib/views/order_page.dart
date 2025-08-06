@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firstapp/utils/color.dart';
 import 'package:firstapp/api/api_path.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:firstapp/models/cartitem.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firstapp/models/Districts.dart';
@@ -41,24 +41,69 @@ class _OrderPageState extends State<OrderPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _villageController = TextEditingController();
 
-  final List<String> transportations = ['ຂົນສົ່ງ A', 'ຂົນສົ່ງ B'];
+  final List<String> transportations = ['ອະນຸສິດ', 'ຮຸ່ງອາລຸນ'];
   final List<String> items = ['ຕົ້ນທາງ', 'ປາຍທາງ'];
 
-  File? _selectedImage;
+  // File? _selectedImage;
 
-final ImagePicker _picker = ImagePicker();
+  // final ImagePicker _picker = ImagePicker();
 
-Future<void> _pickImage() async {
-  final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  XFile? imgFile;
 
-  if (pickedFile != null) {
+  Future<void> pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: source,
+      maxHeight: 500,
+      maxWidth: 500,
+      imageQuality: 80,
+    );
+    if (picked == null) return;
+
     setState(() {
-      _selectedImage = File(pickedFile.path);
+      imgFile = picked;
     });
+  }
+
+ Future<String?> uploadImage(XFile imageFile) async {
+  try {
+    final uri = Uri.parse(ApiPath.baseUrl + 'upload/upload-single-file');
+    var request = http.MultipartRequest('POST', uri);
+
+    if (kIsWeb) {
+      final bytes = await imageFile.readAsBytes();
+      final multipartFile = http.MultipartFile.fromBytes(
+        'file', // ✅ Corrected field name
+        bytes,
+        filename: imageFile.name,
+      );
+      request.files.add(multipartFile);
+    } else {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file', // ✅ Corrected field name
+          imageFile.path,
+        ),
+      );
+    }
+
+    var response = await request.send();
+
+    if (response.statusCode == 200) {
+      final respStr = await response.stream.bytesToString();
+      final data = jsonDecode(respStr);
+      return data['fileName']; 
+    } else {
+      print("Image upload failed with ${response.statusCode}");
+      return null;
+    }
+  } catch (e) {
+    print("Error uploading image: $e");
+    return null;
   }
 }
 
-  _SaveOrder() async {
+  Future<void> _SaveOrder() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (selectedProvince == null ||
@@ -66,22 +111,21 @@ Future<void> _pickImage() async {
         selectedTransportation == null ||
         selectedPayment == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Please select all fields.',
-            style: TextStyle(color: Colors.red),
-          ),
-        ),
+        const SnackBar(content: Text('Please complete all required fields.')),
       );
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     try {
-      var token = await storage.read(key: 'token');
+      final token = await storage.read(key: 'token');
+
+      // Optional image upload
+      String? imageUrl;
+      if (imgFile != null) {
+        imageUrl = await uploadImage(imgFile!);
+      }
 
       final orderData = {
         'province': selectedProvince,
@@ -91,6 +135,7 @@ Future<void> _pickImage() async {
         'Transportation': selectedTransportation,
         'total_amount': widget.totalAmount,
         'payment_method': selectedPayment,
+        'payment_image': imageUrl,
       };
 
       final response = await http.post(
@@ -105,13 +150,12 @@ Future<void> _pickImage() async {
       if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         final orderId = responseData['order']['id'];
-
         await saveOrderDetail(order_id: orderId.toString());
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Order placed successfully.')),
         );
       } else {
+        print(response.body);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Failed to place order.')));
@@ -123,9 +167,7 @@ Future<void> _pickImage() async {
       ).showSnackBar(const SnackBar(content: Text('An error occurred.')));
     }
 
-    setState(() {
-      isLoading = false;
-    });
+    setState(() => isLoading = false);
   }
 
   Future<void> saveOrderDetail({required String order_id}) async {
@@ -295,19 +337,26 @@ Future<void> _pickImage() async {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ElevatedButton.icon(
-                              onPressed: _pickImage,
+                              onPressed: () => pickImage(ImageSource.gallery),
                               icon: Icon(Icons.folder),
                               label: Text("Pick Image"),
                             ),
                             const SizedBox(height: 20),
-                            if (_selectedImage != null)
-                              Image.file(
-                                _selectedImage!,
-                                height: 200,
-                                fit: BoxFit.cover,
-                              )
-                            else
-                              Text("No image selected."),
+                            imgFile != null
+                                ? kIsWeb
+                                    ? Image.network(
+                                      imgFile!.path,
+                                      width: double.infinity,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                    )
+                                    : Image.file(
+                                      File(imgFile!.path),
+                                      width: double.infinity,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                    )
+                                : Text("No image selected."),
                           ],
                         ),
                       ),

@@ -1,6 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:firstapp/api/api_path.dart';
 import 'package:firstapp/models/product_model.dart';
-import 'package:flutter/material.dart';
 
 class CuratedItem extends StatelessWidget {
   final Products eCommerceItems;
@@ -86,7 +86,7 @@ class CuratedItem extends StatelessWidget {
               ),
             ),
             SizedBox(width: 10),
-            Text("₭${eCommerceItems.originalPrice.toString()}.000", style: TextStyle(color: Colors.white),),
+            Text("₭${eCommerceItems.originalPrice.toString()}.000", style: TextStyle(color: Colors.white, decoration: TextDecoration.lineThrough,),),
           ],
         ),
       ],

@@ -1,9 +1,9 @@
-import 'package:firstapp/utils/color.dart';
-import 'package:firstapp/views/home_page.dart';
-import 'package:firstapp/views/not_page.dart';
-import 'package:firstapp/views/profile.dart';
-import 'package:firstapp/views/search_page.dart';
 import 'package:flutter/material.dart';
+import 'package:firstapp/utils/color.dart';
+import 'package:firstapp/views/profile.dart';
+import 'package:firstapp/views/home_page.dart';
+import 'package:firstapp/views/search_page.dart';
+import 'package:firstapp/views/history_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -17,7 +17,7 @@ class _MainScreenState extends State<MainScreen> {
   final List pages = [
     const HomePage(),
     const SearchPage(),
-    const NotPage(),
+    const HistoryPage(),
     const Profile()
   ];
 

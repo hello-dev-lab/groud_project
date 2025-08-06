@@ -259,7 +259,7 @@ class _CategoryItemsState extends State<CategoryItems> {
                                     const SizedBox(width: 5),
                                     if (item.isCheck == true)
                                       Text(
-                                        "₭ ${(item.price ?? 0)}",
+                                        "₭ ${(item.originalPrice ?? 0)}",
                                         style: const TextStyle(
                                           color: Colors.white,
                                           decoration:

@@ -1,17 +1,18 @@
 import 'dart:convert';
-import 'package:firstapp/Widgets/curated_item.dart';
-import 'package:firstapp/api/api_path.dart';
-import 'package:firstapp/models/category_model.dart';
-import 'package:firstapp/models/product_model.dart';
-import 'package:firstapp/utils/CartProvider.dart';
-import 'package:firstapp/utils/color.dart';
-import 'package:firstapp/Widgets/banner.dart';
-import 'package:firstapp/views/cart_screen.dart';
-import 'package:firstapp/views/category_items.dart';
-import 'package:firstapp/views/detail_screen.dart';
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:firstapp/utils/color.dart';
+import 'package:firstapp/api/api_path.dart';
+import 'package:firstapp/Widgets/banner.dart';
+import 'package:firstapp/views/cart_screen.dart';
+import 'package:firstapp/utils/CartProvider.dart';
+import 'package:firstapp/views/detail_screen.dart';
+import 'package:firstapp/Widgets/curated_item.dart';
+import 'package:firstapp/models/product_model.dart';
+import 'package:firstapp/views/category_items.dart';
+import 'package:firstapp/models/category_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -152,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const MyBanner(),
-                    const Padding(
+                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 18,
@@ -161,7 +162,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "Categories",
+                            "Categories".tr,
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.white,
@@ -169,7 +170,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           Text(
-                            "ເພີ່ມເຕີມ",
+                            "more".tr,
                             style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         ],
@@ -246,7 +247,7 @@ class _HomePageState extends State<HomePage> {
                                 }).toList(),
                           ),
                         ),
-                    const Padding(
+                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 18,
@@ -255,7 +256,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "ເລືອກຊື້ຕາມໝວດໝູ່",
+                            "Choose to buy by category".tr,
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.white,
@@ -263,7 +264,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           Text(
-                            "ເພີ່ມເຕີມ",
+                            "more".tr,
                             style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         ],

@@ -181,7 +181,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   Row(
                     children: [
                       Text(
-                        "₭ ${widget.eCommerceApp.price?.toStringAsFixed(2) ?? '000'}0",
+                        "₭ ${widget.eCommerceApp.price?.toStringAsFixed(2) ?? '000'}",
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 18,
@@ -190,8 +190,8 @@ class _DetailScreenState extends State<DetailScreen> {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        '₭${widget.eCommerceApp.originalPrice.toString()}.000',
-                        style: const TextStyle(color: Colors.white),
+                        '₭${widget.eCommerceApp.originalPrice.toString()}',
+                        style: const TextStyle(color: Colors.white, decoration: TextDecoration.lineThrough,),
                       ),
                     ],
                   ),
@@ -281,11 +281,29 @@ class _DetailScreenState extends State<DetailScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 8.0),
                                     child: Text(
-                                      "₭ ${product.price?.toStringAsFixed(2) ?? '0.00'}0",
+                                      "₭ ${product.price?.toStringAsFixed(2) ?? '0.00'}",
                                       style: const TextStyle(
                                         color: Colors.green,
                                         fontWeight: FontWeight.w600,
                                       ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    "₭ ${product.originalPrice?.toString() ?? '0.00'}",
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    product.description ?? '',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
                                     ),
                                   ),
                                 ],
@@ -363,11 +381,11 @@ class _DetailScreenState extends State<DetailScreen> {
                 onTap: () {
                   cartProvider.addItem(
                     CartItem(
+                      productId: widget.eCommerceApp.id.toString() ?? '',
                       name: widget.eCommerceApp.name ?? "No name",
                       quantity: 1,
                       price: widget.eCommerceApp.price?.toDouble() ?? 0.0,
                       imageUrl: widget.eCommerceApp.imageUrl ?? "",
-                      productId: '',
                     ),
                   );
                   Navigator.push(

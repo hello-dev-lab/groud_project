@@ -1,13 +1,14 @@
 import 'dart:convert';
-
+import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:firstapp/utils/color.dart';
 import 'package:firstapp/api/api_path.dart';
 import 'package:firstapp/pages/signin.dart';
 import 'package:firstapp/pages/signup.dart';
-import 'package:firstapp/utils/color.dart';
 import 'package:firstapp/views/main_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
+
 
 class Onboarding extends StatefulWidget {
   const Onboarding({super.key});
@@ -36,7 +37,7 @@ class _OnboardingState extends State<Onboarding> {
               fit: BoxFit.cover,
             ),
             Text(
-              "Wow! You are here",
+              "You are here".tr,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 30, 
@@ -45,7 +46,7 @@ class _OnboardingState extends State<Onboarding> {
             ),
             SizedBox(height: 80),
             Text(
-              "ຍິນດີຕ້ອນຮັບ",
+              "welcome".tr,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 30,
@@ -70,7 +71,7 @@ class _OnboardingState extends State<Onboarding> {
                 ),
                 child: Center(
                   child: Text(
-                    "ເຂົ້າສູ່ລະບົບ",
+                    "login_title".tr,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 25.0,
@@ -99,7 +100,7 @@ class _OnboardingState extends State<Onboarding> {
                 ),
                 child: Center(
                   child: Text(
-                    "ລົງທະບຽນ",
+                    "register".tr,
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 25.0,
@@ -112,7 +113,7 @@ class _OnboardingState extends State<Onboarding> {
            
             SizedBox(height: MediaQuery.of(context).size.height / 8),
             Text(
-              "ເຂົ້າສູ່ລະບົບດ້ວຍ: ",
+              "login by".tr,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20.0,
